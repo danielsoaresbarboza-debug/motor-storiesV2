@@ -256,6 +256,7 @@ details.mais[open]>summary{margin-bottom:10px}
           <div class="fita" id="fita"></div>
         </div>
         <div class="pilha">
+          <div class="cartao so-escrita" id="avisoFotos" hidden><h3>Fotos automáticas</h3><p class="dica">Esta sequência tem stories com foto de fundo. Elas entram sozinhas no Motor vermelho, que também envia direto para o Instagram.</p><a class="btn pri" id="btVermelho2" href="#" target="_blank" rel="noopener">Abrir no Motor vermelho ↗</a></div>
           <div class="passo" id="passo"></div>
 
           <div class="cartao" id="editor" hidden>
@@ -280,6 +281,7 @@ details.mais[open]>summary{margin-bottom:10px}
               <h3>Fundo</h3>
               <div class="cores" id="cores"></div>
             </div>
+            <label for="edBusca" id="rotBusca" hidden>Foto automática (em inglês: assunto + cor + lugar)<input id="edBusca" placeholder="red umbrella gray street"></label>
             <div class="linha" id="blocoFoto" hidden>
               <label class="btn" for="edFoto" style="flex-direction:row;color:var(--fg)"><span id="rotFoto">Escolher foto</span><input type="file" id="edFoto" accept="image/*" hidden></label>
               <button class="peq fant" id="btTirarFoto">Tirar a foto</button>
@@ -458,14 +460,14 @@ const ROTINA = {
 const rotinaDe = d => ROTINA[deIso(d).getDay()];
 
 /* ========== modelo de dados ========== */
-function novoStory(p){ return Object.assign({ id:uid(), tipo:'texto', visual:'nativo', texto:'', pergunta:'', roteiro:'', mostrar:'', fundo:'', sticker:{tipo:'nenhum', texto:'', opcoes:[]} }, p||{}); }
+function novoStory(p){ return Object.assign({ id:uid(), tipo:'texto', visual:'nativo', texto:'', pergunta:'', imgBusca:'', credito:'', roteiro:'', mostrar:'', fundo:'', sticker:{tipo:'nenhum', texto:'', opcoes:[]} }, p||{}); }
 function normalizar(s){
   const seq = { id: s.id || uid(), data: s.data || hoje(), titulo: (s.titulo||'Sequência').slice(0,60), gatilho: s.gatilho||'', dispositivos: s.dispositivos||[], respostasModelo: s.respostasModelo||[], conferir: s.conferir||[], status: s.status==='postado'?'postado':'planejado', criado: s.criado || Date.now(), stories: [] };
   (s.stories||[]).forEach(st => {
     const t = ['texto','foto','gravar','resposta','case'].includes(st.tipo) ? st.tipo : 'texto';
     const v = ['vidro','nativo','manchete','papel','nota','conversa','anuncio','ritual','capa'].includes(st.visual) ? st.visual : 'nativo';
     const sk = st.sticker && typeof st.sticker === 'object' ? st.sticker : {};
-    seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', pergunta: st.pergunta||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'',
+    seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', pergunta: st.pergunta||'', imgBusca: st.imgBusca||'', credito: st.credito||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'',
       sticker: { tipo: ['caixinha','enquete','quiz','slider','link'].includes(sk.tipo) ? sk.tipo : 'nenhum', texto: sk.texto||'', opcoes: Array.isArray(sk.opcoes) ? sk.opcoes.slice(0,4) : [] } }));
   });
   if (!seq.stories.length) seq.stories.push(novoStory());
@@ -686,7 +688,7 @@ function desenhar(ctx, st, o){
   if (v === 'vidro' || (st.tipo === 'foto' && v === 'vidro')){
     const src = fotos[st.id]; const im = imagem(src);
     const cor = st.fundo || PR; const claroF = !im && cor !== 'grad' && lum(cor) > 0.6;
-    if (im){ cobrir(ctx, im, 0, 0, W, H); ambiente(ctx, true, true); } else fundoElegante(ctx, cor);
+    if (im){ cobrir(ctx, im, 0, 0, W, H); const gg = ctx.createLinearGradient(0, H*0.45, 0, H); gg.addColorStop(0, 'rgba(0,0,0,0)'); gg.addColorStop(1, 'rgba(0,0,0,.35)'); ctx.fillStyle = gg; ctx.fillRect(0,0,W,H); ambiente(ctx, true, true); } else fundoElegante(ctx, cor);
     const dark = !claroF;
     const palavras = st.texto.replace(/\*\*/g,'').split(/\s+/).filter(Boolean).length;
     const serif = palavras <= 18;
@@ -697,6 +699,7 @@ function desenhar(ctx, st, o){
     const fg = vidro(ctx, px, py, pw, ph, 56, dark);
     cabecalhoVidro(ctx, px + pad, py + pad + 4, fg);
     escrever(ctx, L, px + pad, py + pad + 50, { cor:fg, marcaFundo:AM, marcaCor:PR });
+    if (im && st.credito){ ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = '500 20px '+F_SANS; ctx.textAlign = 'center'; ctx.fillText(st.credito.slice(0, 90), W/2, H - 120); ctx.textAlign = 'left'; }
     ctx.restore(); return;
   }
   if (st.tipo === 'foto'){
@@ -903,10 +906,12 @@ function renderPasso(){
   if (st.tipo === 'gravar'){ pr.push('Abra o teleprompter e deixe o texto rolando.'); pr.push('No Instagram, abra a câmera do story e grave falando.'); if (st.mostrar) pr.push('Mostre: ' + esc(st.mostrar) + '.'); }
   else if (exportavel(st)){ pr.push('Baixe (ou já baixou com os outros) e escolha a imagem no story.'); }
   else pr.push('Toque em <b>Editar</b> e ' + (st.tipo === 'case' ? 'escolha o print.' : st.tipo === 'foto' ? 'escolha uma foto sua.' : 'escreva o texto.'));
+  if (precisaFoto(st)) pr.unshift(MODO === 'fotos' ? 'A foto de fundo está sendo buscada (' + esc(st.imgBusca) + ').' : 'A foto de fundo entra sozinha no <b>Motor vermelho</b>. Aqui aparece o fundo com luz; em Editar você pode pôr uma foto sua.');
   if (sk.tipo !== 'nenhum') pr.push('No Instagram, coloque o adesivo <b>' + nomes[sk.tipo] + '</b> no espaço tracejado' + (sk.texto ? ' com: “' + esc(sk.texto) + '”' : '') + (sk.opcoes.length ? ' (' + sk.opcoes.map(esc).join(' / ') + ')' : '') + '.');
   p.innerHTML = `<span class="num">Story ${idx+1} de ${n}</span><span class="oque">${oque}</span><ol>${pr.map(x => '<li>'+x+'</li>').join('')}</ol>
-    <div class="linha">${st.tipo === 'gravar' ? '<button class="pri peq" id="btTele">Abrir teleprompter</button>' : ''}${sk.tipo !== 'nenhum' && sk.texto ? '<button class="peq" id="btCopiarAdesivo">Copiar texto do adesivo</button>' : ''}${exportavel(st) ? '<button class="peq" id="btBaixarEste">' + (MODO === 'fotos' ? 'Enviar só este' : 'Baixar só este') + '</button>' : ''}</div>`;
+    <div class="linha">${st.tipo === 'gravar' ? '<button class="pri peq" id="btTele">Abrir teleprompter</button>' : ''}${sk.tipo !== 'nenhum' && sk.texto ? '<button class="peq" id="btCopiarAdesivo">Copiar texto do adesivo</button>' : ''}${MODO === 'fotos' && fotos[st.id] && st.fotoUrl ? '<button class="peq" id="btOutraFoto">Outra foto</button>' : ''}${exportavel(st) ? '<button class="peq" id="btBaixarEste">' + (MODO === 'fotos' ? 'Enviar só este' : 'Baixar só este') + '</button>' : ''}</div>`;
   const t = $('#btTele'); if (t) t.onclick = abrirTele;
+  const of = $('#btOutraFoto'); if (of) of.onclick = () => outraFoto(st);
   const c = $('#btCopiarAdesivo'); if (c) c.onclick = async () => { toast(await copiar(st.sticker.texto) ? 'Copiado. Cole no adesivo do Instagram.' : 'Não deu para copiar.'); };
   const b = $('#btBaixarEste'); if (b) b.onclick = () => MODO === 'fotos' ? enviar([st]) : baixarAzul([st]);
 }
@@ -924,7 +929,7 @@ function renderStories(){
   $('#contador').textContent = (idx+1)+' de '+atual.stories.length;
   renderFita();
   editando = true;
-  $('#edTexto').value = st.texto; $('#edPergunta').value = st.pergunta || ''; $('#edRoteiro').value = st.roteiro; $('#edMostrar').value = st.mostrar;
+  $('#edTexto').value = st.texto; $('#edPergunta').value = st.pergunta || ''; $('#edBusca').value = st.imgBusca || ''; $('#rotBusca').hidden = !(st.visual === 'vidro' || st.tipo === 'foto'); $('#edRoteiro').value = st.roteiro; $('#edMostrar').value = st.mostrar;
   $('#edTipo').value = st.tipo; $('#edVisual').value = st.visual;
   $('#edAdesivo').value = st.sticker.tipo; $('#edAdesivoTxt').value = st.sticker.texto; $('#edOpcoes').value = st.sticker.opcoes.join(' / ');
   $('#sqTitulo').value = atual.titulo; $('#sqData').value = atual.data; $('#sqEstilo').value = '';
@@ -948,7 +953,9 @@ function renderStories(){
   $('#sqDispositivos').textContent = atual.dispositivos.length ? 'Recursos usados: ' + atual.dispositivos.join(', ') + '.' : '';
   $('#btPostado').textContent = atual.status === 'postado' ? 'Desmarcar postada' : 'Marcar como postada';
   $('#confirmaApagar').hidden = true;
-  renderConferencia(); renderPasso(); $('#editor').hidden = !modoEd; $('#conferencia').hidden = !modoEd;
+  renderConferencia(); renderPasso();
+  if (MODO === 'escrita'){ const temF = atual.stories.some(precisaFoto); $('#avisoFotos').hidden = !temF; $('#btVermelho2').href = linkPronto; }
+  if (MODO === 'fotos' && !tentouFotos.has(atual.id) && atual.stories.some(precisaFoto)){ tentouFotos.add(atual.id); setTimeout(() => autoFotos(atual, true), 300); } $('#editor').hidden = !modoEd; $('#conferencia').hidden = !modoEd;
   redesenhar(); renderAcao();
 }
 let tMini;
@@ -957,6 +964,7 @@ function st(){ return atual.stories[idx]; }
 $('#edTexto').oninput = e => { if (editando) return; st().texto = e.target.value; mudou(true); };
 $('#edRoteiro').oninput = e => { st().roteiro = e.target.value; mudou(true); };
 $('#edPergunta').oninput = e => { st().pergunta = e.target.value; mudou(true); };
+$('#edBusca').onchange = e => { st().imgBusca = e.target.value.trim(); if (MODO === 'fotos' && st().fotoUrl){ delete fotos[st().id]; st().fotoUrl = ''; fotoCands.delete(st().id); } mudou(true); if (MODO === 'fotos') autoFotos(atual, true); };
 $('#edMostrar').oninput = e => { st().mostrar = e.target.value; mudou(true); };
 $('#edTipo').onchange = e => { st().tipo = e.target.value; mudou(); renderStories(); };
 $('#edVisual').onchange = e => { st().visual = e.target.value; st().fundo = ''; mudou(); renderStories(); };
@@ -977,12 +985,12 @@ $('#btApagarSeq').onclick = () => { $('#confirmaApagar').hidden = false; };
 $('#btNaoApagar').onclick = () => { $('#confirmaApagar').hidden = true; };
 $('#btSimApagar').onclick = () => { atual.stories.forEach(x => delete fotos[x.id]); seqs = seqs.filter(s => s !== atual); atual = null; salvarFotos(); salvarSeqs(); ir('hoje'); };
 function aplicarEstilo(seq, estilo){
-  if (!estilo) return; const bonitos = ['vidro','manchete','vidro','conversa','papel','vidro','nota'];
+  if (!estilo) return; const bonitos = ['vidro','vidro','anuncio','vidro','conversa','vidro','manchete'];
   seq.stories.forEach((x,i) => { if (x.tipo !== 'texto' || x.visual === 'ritual' || x.visual === 'capa') return; if (estilo === 'natural') x.visual = 'nativo'; else if (estilo === 'bonito') x.visual = bonitos[i % bonitos.length]; else x.visual = i % 2 ? bonitos[(i>>1) % bonitos.length] : 'nativo'; x.fundo = ''; });
 }
 function lerFoto(arq, max){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, max/Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width*k); c.height = Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg', .82)); }; im.onerror = rej; im.src = r.result; }; r.onerror = rej; r.readAsDataURL(arq); }); }
-$('#edFoto').onchange = async e => { const f = e.target.files[0]; if (!f) return; fotos[st().id] = await lerFoto(f, 1600); salvarFotos(); e.target.value = ''; mudou(true); renderStories(); };
-$('#btTirarFoto').onclick = () => { delete fotos[st().id]; salvarFotos(); mudou(true); renderStories(); };
+$('#edFoto').onchange = async e => { const f = e.target.files[0]; if (!f) return; fotos[st().id] = await lerFoto(f, 1600); st().credito = ''; st().fotoUrl = ''; salvarFotos(); e.target.value = ''; mudou(true); renderStories(); };
+$('#btTirarFoto').onclick = () => { st().fotoUrl = ''; st().credito = ''; delete fotos[st().id]; salvarFotos(); mudou(true); renderStories(); };
 $('#btTirarFoto').textContent = 'Tirar a foto';
 
 /* ========== conferência antes de postar (GÊNESE: valide antes de postar) ========== */
@@ -1014,6 +1022,64 @@ function renderConferencia(){
   c.innerHTML = '<h3>Conferência antes de postar</h3>' + (av.length ? '<ul style="margin:0;padding-left:18px">' + av.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul>' : '<p class="okc">Tudo certo para postar.</p>');
 }
 
+/* ========== fotos automáticas (Openverse e Wikimedia, como nos carrosséis; só no vermelho) ========== */
+const CLICHES = /\b(stairs?|staircase|road|highway|rail(road|way)?s?|tracks|light ?bulb|puzzle|chess|gears?|cogs?|target|compass|maze|labyrinth|hourglass|mountain ?top|rocket|brain|handshake|laptop|post-?it|sticky notes?|chart|graph|stock market|business ?(man|woman|people)|meeting|office desk)\b/i;
+function analisarMiniatura(im){
+  const cv = document.createElement('canvas'); cv.width = 27; cv.height = 48; const g = cv.getContext('2d');
+  const ir = im.naturalWidth / im.naturalHeight, br = 27/48; let sw, sh; if (ir > br){ sh = im.naturalHeight; sw = sh*br; } else { sw = im.naturalWidth; sh = sw/br; }
+  g.drawImage(im, (im.naturalWidth - sw)/2, (im.naturalHeight - sh)/2, sw, sh, 0, 0, 27, 48);
+  const d = g.getImageData(0, 0, 27, 48).data; const L = []; let satMax = 0, satSoma = 0;
+  for (let k = 0; k < d.length; k += 4){ const r = d[k]/255, gg = d[k+1]/255, b = d[k+2]/255; L.push(0.2126*r + 0.7152*gg + 0.0722*b); const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), sat = mx > 0 ? (mx - mn)*mx : 0; satMax = Math.max(satMax, sat); satSoma += sat; }
+  const media = L.reduce((a, v) => a + v, 0)/L.length, desvio = Math.sqrt(L.reduce((a, v) => a + (v - media)**2, 0)/L.length);
+  const ord = [...L].sort((a, b) => a - b), amp = ord[Math.floor(L.length*0.97)] - ord[Math.floor(L.length*0.03)], destaque = Math.max(0, satMax - satSoma/L.length*1.6);
+  let bordas = 0, nb = 0; for (let y = 0; y < 48; y++) for (let x = 0; x < 27; x++){ const i = y*27 + x; if (x < 26){ bordas += Math.abs(L[i] - L[i+1]); nb++; } if (y < 47){ bordas += Math.abs(L[i] - L[i+27]); nb++; } }
+  return amp*0.6 + desvio*0.8 + destaque*1.6 - (bordas/nb)*3.2 - (media < 0.16 ? 0.35 : 0) - (media > 0.9 ? 0.2 : 0);
+}
+async function baixarImagem(u, tempo){ const c = new AbortController(); const t = setTimeout(() => c.abort(), tempo || 9000); try { const r = await fetch(u, { mode:'cors', signal:c.signal }); if (!r.ok) return null; const b = await r.blob(); return b.type.startsWith('image/') ? b : null; } catch(e){ return null; } finally { clearTimeout(t); } }
+async function candidatos(q, usadas){
+  const base = 'https://api.openverse.org/v1/images/?page_size=30&mature=false&q=' + encodeURIComponent(q);
+  let res = [], respondeu = false;
+  for (const extra of ['&aspect_ratio=tall', '&aspect_ratio=square', '']){ try { const r = await fetch(base + extra); respondeu = true; if (r.ok){ const j = await r.json(); res = res.concat(j.results || []); } } catch(e){} if (res.length >= 12) break; }
+  if (res.length < 8){ try {
+    const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=30&gsrsearch=' + encodeURIComponent(q + ' filetype:bitmap') + '&prop=imageinfo&iiprop=url|size|extmetadata&iiurlwidth=1600';
+    const r = await fetch(u); respondeu = true;
+    if (r.ok){ const j = await r.json(); const limpa = h => String(h || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+      Object.values((j.query && j.query.pages) || {}).sort((a, b) => (a.index || 0) - (b.index || 0)).forEach(pg => { const ii = pg.imageinfo && pg.imageinfo[0]; if (!ii || !ii.thumburl) return; const md = ii.extmetadata || {};
+        res.push({ url: ii.thumburl, thumbnail: ii.thumburl.replace(/\/(\d+)px-/, '/400px-'), width: ii.width, height: ii.height, title: (pg.title || '').replace(/^File:/, ''), tags: [], creator: limpa(md.Artist && md.Artist.value).slice(0, 60), licenca: limpa(md.LicenseShortName && md.LicenseShortName.value), source: 'Wikimedia Commons' }); }); }
+  } catch(e){} }
+  if (!respondeu) throw { code:'rede' };
+  const vistos = new Set();
+  res = res.filter(x => x && x.url && !vistos.has(x.url) && vistos.add(x.url) && !usadas.has(x.url) && (!x.width || x.width >= 900) && !CLICHES.test((x.title || '') + ' ' + (x.tags || []).map(t => t.name).join(' ')));
+  const notas = await Promise.all(res.slice(0, 12).map(async x => { const b = await baixarImagem(x.thumbnail || x.url, 7000); if (!b) return null; const url = URL.createObjectURL(b);
+    try { const im = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; }); return { x, nota: analisarMiniatura(im) + ((x.height || 0) > (x.width || 0) ? 0.1 : 0) }; } catch(e){ return null; } finally { URL.revokeObjectURL(url); } }));
+  return notas.filter(Boolean).sort((a, b) => b.nota - a.nota).map(n => n.x);
+}
+function creditoDe(x){ if (x.licenca) return 'Foto: ' + (x.creator || 'autor desconhecido') + ' (' + x.licenca + ')'; const lic = [x.license ? 'CC ' + String(x.license).toUpperCase() : '', x.license_version || ''].join(' ').trim(); return 'Foto: ' + (x.creator || 'autor desconhecido') + (lic ? ' (' + lic + ')' : '') + (x.source && x.source !== 'Wikimedia Commons' ? '' : ''); }
+async function porFoto(stx, x){ const b = await baixarImagem(x.url, 12000); if (!b) return false; const uri = await lerFoto(b, 1600); fotos[stx.id] = uri; stx.credito = creditoDe(x); stx.fotoUrl = x.url; salvarFotos(); return true; }
+const fotoCands = new Map(); let autoRodando = false; const tentouFotos = new Set();
+function precisaFoto(x){ return x.imgBusca && !fotos[x.id] && (x.visual === 'vidro' || x.tipo === 'foto'); }
+async function autoFotos(seq, silencioso){
+  if (MODO !== 'fotos' || autoRodando || !seq) return;
+  const lista = seq.stories.filter(precisaFoto); if (!lista.length){ if (!silencioso) toast('Todos os stories com foto já têm foto.'); return; }
+  autoRodando = true; let ok = 0; const usadas = new Set(seq.stories.map(x => x.fotoUrl).filter(Boolean));
+  for (const x of lista){
+    toast('Procurando foto para o story ' + (seq.stories.indexOf(x) + 1) + '…', 8000);
+    let c = [];
+    try { c = await candidatos(x.imgBusca, usadas); if (!c.length && x.imgBusca.split(' ').length > 2) c = await candidatos(x.imgBusca.split(' ').slice(0, 2).join(' '), usadas); }
+    catch(e){ autoRodando = false; toast('Os bancos de fotos não responderam agora. Tente de novo em alguns minutos, ou escolha uma foto sua em Editar.', 6000); return; }
+    fotoCands.set(x.id, c);
+    for (const cand of c){ if (await porFoto(x, cand)){ usadas.add(cand.url); ok++; break; } }
+    salvarSeqs(); if (atual === seq){ redesenhar(); renderFita(); renderPasso(); renderAcao(); }
+  }
+  autoRodando = false; toast(ok ? ok + ' fotos colocadas. Toque em "Outra foto" para trocar.' : 'Não achei fotos boas agora. Escolha uma sua em Editar.', 4500);
+}
+async function outraFoto(x){
+  const lista = fotoCands.get(x.id) || []; if (!lista.length){ delete fotos[x.id]; x.fotoUrl = ''; await autoFotos(atual, true); return; }
+  const i0 = Math.max(0, lista.findIndex(c => c.url === x.fotoUrl)); const usadas = new Set(atual.stories.map(s => s.fotoUrl).filter(Boolean));
+  for (let j = 1; j < lista.length; j++){ const c = lista[(i0 + j) % lista.length]; if (usadas.has(c.url)) continue; toast('Trocando a foto…'); if (await porFoto(x, c)){ salvarSeqs(); redesenhar(); renderFita(); return; } }
+  toast('Acabaram as opções desta busca.');
+}
+
 /* ========== teleprompter ========== */
 let teleRaf = null, teleY = 0, teleUlt = 0, wake = null;
 function abrirTele(){
@@ -1040,6 +1106,7 @@ async function descomprimir(c){ const ds = new DecompressionStream('deflate-raw'
 let linkPronto = LINK_VERMELHO, tLink;
 function pacote(){ const de = hoje(); return seqs.filter(s => s.data >= de || (atual && s.id === atual.id)).map(s => ({ ...s, stories: s.stories.map(x => ({ ...x })) })); }
 function agendarLink(){ if (MODO !== 'escrita') return; clearTimeout(tLink); tLink = setTimeout(async () => { try { const p = pacote(); if (!p.length){ linkPronto = LINK_VERMELHO; } else linkPronto = LINK_VERMELHO + '?c=' + await comprimir(JSON.stringify({ v:1, sequencias:p })); const a = $('#btVermelho'); if (a) a.href = linkPronto; } catch(e){} }, 400); }
+$('#btVermelho2').onclick = () => { copiar(linkPronto); toast('Link copiado. Se abrir aqui dentro, use o ícone vermelho do Motor Stories e toque em Colar do Motor azul.', 5000); };
 $('#btVermelho').onclick = () => { copiar(linkPronto); toast('Link copiado. Se abrir aqui dentro, use o ícone vermelho do Motor Stories e toque em Colar do Motor azul.', 5000); };
 async function importarTexto(txt, silencioso){
   txt = (txt||'').trim(); if (!txt) return false;
@@ -1179,7 +1246,7 @@ ESTRUTURA DA SEQUÊNCIA
 TIPOS E VISUAIS
 - tipo "texto": imagem com texto. tipo "foto": foto do Daniel (ele escolhe) com texto curto por cima; use quando a entrada fala de algo que dá para fotografar (mesa, tela, lugar, objeto). tipo "gravar": ele grava no Instagram falando para a câmera ou mostrando a tela; preencha "roteiro" (falas em linhas curtas, 15 a 40 segundos, começa pelo gancho) e "mostrar" (o que filmar).
 - tipo "resposta": resposta de caixinha (preencha "pergunta"). tipo "case": resultado com print (o Daniel escolhe a imagem).
-- visual "vidro": o mais elegante, igual aos carrosséis do Daniel: painel de vidro líquido sobre fundo com luz (ou sobre a foto dele), texto curto em serifa. Use em frases de impacto e opinião.
+- visual "vidro": o mais elegante, igual aos carrosséis do Daniel: painel de vidro líquido sobre uma FOTO de fundo, texto curto em serifa. No estilo elegante, a maioria dos stories de texto é "vidro". Todo story "vidro" leva "imgBusca": busca de foto em inglês, 2 a 5 palavras simples de banco de imagem, assunto + cor + lugar ("red umbrella gray street", "coffee cup wooden desk morning"). Um único assunto, grande, com contraste. Nada de clichê (escadas, estradas, lâmpada, quebra-cabeça, xadrez, engrenagem, alvo, montanha, foguete, cérebro, aperto de mão, notebook, post-its, gráfico). Cada story pede uma foto diferente.
 - visual: "nativo" (parece feito no próprio Instagram: texto centralizado em fundo de cor), "manchete" (fundo preto, frase grande), "papel" (fundo claro), "nota" (app de notas, bom para lista curta ou desabafo), "conversa" (parece um tweet, bom para frase de opinião), "anuncio" (título grande em serifa no 1º parágrafo; depois de uma linha em branco, texto ou lista "1. … 2. …"), "ritual" (capa fixa da caixinha; só no fim dos dias de caixinha).
 - Estilo natural: maioria nativo, foto e gravar. Estilo bonito (elegante): maioria vidro, com manchete, anuncio e conversa. Misto: alterne nativo e vidro.
 - Alterne visuais; nunca 3 stories seguidos iguais.
@@ -1188,7 +1255,7 @@ FORMATO DA RESPOSTA
 Se faltar matéria-prima (menos de 3 fatos concretos na entrada) e a entrada não pedir para escrever mesmo assim:
 {"perguntas":["3 a 5 perguntas curtas e soltas, tipo: quantas vezes você já fez isso? o que cansa nisso? alguém falou alguma coisa? o que você pensa fazendo isso? vale a pena?"]}
 Senão:
-{"sequencias":[{"data":"AAAA-MM-DD","titulo":"até 40 caracteres","gatilho":"dia|abertura|caixinha|bastidor|leve|alta|carrossel|opiniao|destaque","dispositivos":["recursos do Ladeira usados"],"stories":[{"tipo":"texto|foto|gravar|resposta|case","visual":"vidro|nativo|manchete|papel|nota|conversa|anuncio|ritual","pergunta":"só para resposta","texto":"texto que aparece (para gravar: a frase de abertura)","roteiro":"só para gravar","mostrar":"só para gravar ou foto: o que mostrar","fundo":"opcional para nativo: #0F0F10, #FFD400, #F5F3EE, #1B2A6B, #C2362B, #2E5E4E ou grad","sticker":{"tipo":"nenhum|caixinha|enquete|quiz|slider|link","texto":"pergunta curta do adesivo","opcoes":["só para enquete e quiz"]}}],"respostasModelo":["2 ou 3 respostas que o Daniel pode usar amanhã se a caixinha vier fraca, escritas como pergunta de seguidor + resposta curta dele, sem inventar fato"],"conferir":["cada afirmação sobre o Daniel ou opinião dele que não está na entrada"]}]}`;
+{"sequencias":[{"data":"AAAA-MM-DD","titulo":"até 40 caracteres","gatilho":"dia|abertura|caixinha|bastidor|leve|alta|carrossel|opiniao|destaque","dispositivos":["recursos do Ladeira usados"],"stories":[{"tipo":"texto|foto|gravar|resposta|case","visual":"vidro|nativo|manchete|papel|nota|conversa|anuncio|ritual","pergunta":"só para resposta","imgBusca":"só para vidro: busca de foto em inglês","texto":"texto que aparece (para gravar: a frase de abertura)","roteiro":"só para gravar","mostrar":"só para gravar ou foto: o que mostrar","fundo":"opcional para nativo: #0F0F10, #FFD400, #F5F3EE, #1B2A6B, #C2362B, #2E5E4E ou grad","sticker":{"tipo":"nenhum|caixinha|enquete|quiz|slider|link","texto":"pergunta curta do adesivo","opcoes":["só para enquete e quiz"]}}],"respostasModelo":["2 ou 3 respostas que o Daniel pode usar amanhã se a caixinha vier fraca, escritas como pergunta de seguidor + resposta curta dele, sem inventar fato"],"conferir":["cada afirmação sobre o Daniel ou opinião dele que não está na entrada"]}]}`;
 
 const RITMO_SEMANA = `Rotina da semana (Protocolo GÊNESE adaptado, sem ofertas): segunda = abertura; terça a sexta = caixinha; sábado = bastidor; domingo = leve. Use o gatilho de cada dia.
 Nos dias de caixinha da semana ainda não chegaram perguntas: plante 2 ou 3 por dia (diferentes entre os dias, sobre conteúdo, marca, ser lembrado e IA nos bastidores), marcadas em "conferir". Nos dias sem fato dado pelo Daniel, o conteúdo pessoal vira "gravar" com roteiro em forma de perguntas para ele responder ao vivo.`;

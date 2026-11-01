@@ -33,7 +33,7 @@ Escrita: fragmentar, ponto-final, 1 a 3 palavras em `**negrito**` por story, at�
   "gatilho":"alta",
   "dispositivos":["escalada de atenção","super sincero"],
   "stories":[
-    {"tipo":"texto","visual":"vidro|nativo|manchete|papel|nota|conversa|anuncio","texto":"...","fundo":"#0F0F10 (opcional)",
+    {"tipo":"texto","visual":"vidro|nativo|manchete|papel|nota|conversa|anuncio","texto":"...","imgBusca":"busca de foto em inglês (só para vidro)","fundo":"#0F0F10 (opcional)",
      "sticker":{"tipo":"nenhum|caixinha|enquete|quiz|slider","texto":"pergunta curta","opcoes":["Sim","Não"]}}
   ],
   "respostasModelo":[],
@@ -41,7 +41,7 @@ Escrita: fragmentar, ponto-final, 1 a 3 palavras em `**negrito**` por story, at�
 }]}
 ```
 - `id`: `alta-` + data sem traços + número do tema (1, 2, 3). `data`: o dia da execução.
-- Visual `vidro` (o mais elegante, painel de vidro líquido com texto em serifa) na maioria dos stories de texto; `anuncio` para o título grande (1º parágrafo; depois de uma linha em branco, o texto).
+- Visual `vidro` (o mais elegante: painel de vidro líquido com texto em serifa sobre uma foto) na maioria dos stories de texto, inclusive o último com adesivo. Todo `vidro` leva `imgBusca`: 2 a 5 palavras em inglês, assunto + cor + lugar ("red umbrella gray street"), um assunto só, com contraste, sem clichê (escada, estrada, lâmpada, quebra-cabeça, xadrez, engrenagem, alvo, montanha, foguete, cérebro, aperto de mão, notebook, post-its, gráfico); cada story com uma foto diferente. O Motor vermelho busca a foto sozinho; `anuncio` para o título grande (1º parágrafo; depois de uma linha em branco, o texto).
 - Toda fonte usada entra em `conferir` com veículo, data e link.
 
 ## 4. Gerar o link e entregar
