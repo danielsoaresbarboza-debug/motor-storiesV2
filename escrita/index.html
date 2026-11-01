@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta name="color-scheme" content="dark only">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Motor Stories · Escrita</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#2F55E8">
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100dvh; display: grid; place-items: center; background: radial-gradient(120% 80% at 50% 0%, #2F55E8 0%, #0A123A 70%); color: #F5F3EE; font: 16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; padding: 24px; text-align: center; }
+  main { max-width: 360px; display: flex; flex-direction: column; gap: 18px; align-items: center; }
+  img { width: 96px; height: 96px; border-radius: 24px; box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+  h1 { margin: 0; font-size: 22px; font-weight: 600; }
+  p { margin: 0; color: rgba(245,243,238,.75); font-size: 14px; }
+  a.btn { display: block; width: 100%; padding: 16px 20px; border-radius: 999px; background: #2F55E8; color: #FFFFFF; box-shadow: 0 10px 30px rgba(47,85,232,.45); font-weight: 600; text-decoration: none; font-size: 17px; }
+</style>
+</head>
+<body>
+<main>
+  <img src="icone-192.png" alt="">
+  <h1>Motor Stories · Escrita</h1>
+  <p id="msg">Para ter este ícone na tela inicial: toque em <b>⋮</b> (canto de cima) → <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>. Depois abra pelo ícone.</p>
+  <a class="btn" id="abrir" href="https://claude.ai/artifact/BiSYDPkFdLyPLBE876DdR4">Abrir o Motor Stories azul</a>
+</main>
+<script>
+  // Atalho do Motor azul: no Android tenta abrir direto no app do Claude; senão, abre o link normal.
+  var URL_AZUL = 'https://claude.ai/artifact/BiSYDPkFdLyPLBE876DdR4';
+  var android = /Android/i.test(navigator.userAgent);
+  var comVolta = 'intent://claude.ai/artifact/BiSYDPkFdLyPLBE876DdR4#Intent;scheme=https;package=com.anthropic.claude;S.browser_fallback_url=' + encodeURIComponent(URL_AZUL) + ';end';
+  var semVolta = 'intent://claude.ai/artifact/BiSYDPkFdLyPLBE876DdR4#Intent;scheme=https;package=com.anthropic.claude;end';
+  // O botão (toque) abre no app do Claude; se o app não estiver instalado, cai no navegador.
+  document.getElementById('abrir').href = android ? comVolta : URL_AZUL;
+  // Pelo ícone instalado, tenta abrir sozinho no app do Claude (sem cair no navegador se o Android bloquear).
+  var instalado = /[?&]atalho/.test(location.search) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  if (instalado) {
+    document.getElementById('msg').textContent = 'Toque no botão para abrir o Motor Stories azul no app do Claude.';
+    if (android) setTimeout(function () { location.href = semVolta; }, 200);
+    else setTimeout(function () { location.href = URL_AZUL; }, 200);
+  }
+</script>
+</body>
+</html>

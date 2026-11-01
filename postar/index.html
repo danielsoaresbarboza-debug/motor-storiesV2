@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icone-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="theme-color" content="#C2362B">
+</head>
+<body>
+<title>Motor Stories · Postar</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+/* Layout: app de uma coluna com abas embaixo; a prévia 9:16 é o centro de cada tela. Azul = escrever (dentro do Claude). Vermelho = postar (fora). */
+:root{
+  --bg:#EDF1FF; --surface:#FFFFFF; --fg:#10142B; --muted:#5A6185; --line:#D6DCF3; --ink:#2F55E8; --ink-fg:#FFFFFF;
+  --amarelo:#FFD400; --preto:#0F0F10; --papel:#F5F3EE; --ok:#1F8A4C; --aviso:#B26A00;
+  --f-corpo:"Instrument Sans",Roboto,"Segoe UI",system-ui,sans-serif; --f-display:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --r:16px; color-scheme:light;
+}
+:root.vermelho{ --bg:#FFF0EE; --surface:#FFFFFF; --fg:#2A100D; --muted:#86534D; --line:#F2D3CE; --ink:#C2362B; }
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ --bg:#0A0F24; --surface:#141A36; --fg:#EEF1FF; --muted:#9AA3CF; --line:#262E57; --ink:#7C93FF; --ink-fg:#0A0F24; --ok:#4CC27F; --aviso:#F0B04A; color-scheme:dark }
+  :root.vermelho:not([data-theme="light"]){ --bg:#1E0C0A; --surface:#2B1512; --fg:#FFF0EE; --muted:#D59C94; --line:#43221E; --ink:#FF7A6E; --ink-fg:#1E0C0A }
+}
+:root[data-theme="dark"]{ --bg:#0A0F24; --surface:#141A36; --fg:#EEF1FF; --muted:#9AA3CF; --line:#262E57; --ink:#7C93FF; --ink-fg:#0A0F24; --ok:#4CC27F; --aviso:#F0B04A; color-scheme:dark }
+:root.vermelho[data-theme="dark"]{ --bg:#1E0C0A; --surface:#2B1512; --fg:#FFF0EE; --muted:#D59C94; --line:#43221E; --ink:#FF7A6E; --ink-fg:#1E0C0A }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-corpo);-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:calc(env(safe-area-inset-top,0px) + 5px);background:var(--ink);z-index:20}
+.app{max-width:620px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 190px}
+header.topo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.marca{font:400 30px/1 var(--f-display);letter-spacing:-.01em}
+.marca i{color:var(--ink)}
+.selo{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.12em;padding:5px 9px;border-radius:999px;background:var(--ink);color:var(--ink-fg)}
+h2{font:400 26px/1.1 var(--f-display);margin:0;text-wrap:balance}
+h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted)}
+.pilha{display:flex;flex-direction:column;gap:14px}
+.linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cartao{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+button,.btn{font:600 15px/1 var(--f-corpo);border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:12px 15px;border-radius:999px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px}
+button:focus-visible,.btn:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+button.pri,.btn.pri{background:var(--ink);color:var(--ink-fg);border-color:transparent}
+button.peq{padding:8px 12px;min-height:36px;font-size:13px}
+button.fant{background:transparent;border-color:transparent;color:var(--ink)}
+button:disabled{opacity:.5;cursor:default}
+label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+input,textarea,select{font:15px/1.4 var(--f-corpo);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%}
+textarea{min-height:120px;resize:vertical}
+.seg{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.seg button{flex:0 0 auto;padding:9px 13px;min-height:38px;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.dica{font-size:13px;color:var(--muted)}
+.aviso{font-size:13px;color:var(--aviso);font-weight:600}
+
+/* Semana */
+.semana{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dia{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:74px;font-variant-numeric:tabular-nums}
+.dia b{font-size:18px}
+.dia small{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.dia .pt{width:9px;height:9px;border-radius:50%;border:2px solid var(--line)}
+.dia.plan .pt{background:var(--amarelo);border-color:var(--amarelo)}
+.dia.post .pt{background:var(--ok);border-color:var(--ok)}
+.dia.hoje{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.dia.sel{background:var(--fg);color:var(--bg)}
+.dia.sel small{color:var(--bg)}
+.ofensiva{display:flex;align-items:baseline;gap:8px}
+.ofensiva b{font:400 44px/1 var(--f-display);color:var(--ink)}
+
+/* Sequência */
+.fita{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x mandatory}
+.mini{flex:0 0 auto;width:84px;scroll-snap-align:start;display:flex;flex-direction:column;gap:5px;align-items:center;background:none;border:0;padding:0;min-height:0;border-radius:0}
+.mini img{width:84px;height:149px;border-radius:10px;object-fit:cover;border:2px solid transparent;background:var(--line)}
+.mini[aria-current="true"] img{border-color:var(--ink)}
+.mini span{font-size:11px;color:var(--muted);font-weight:600}
+.mini.add img{display:none}
+.mini.add .mais{width:84px;height:149px;border-radius:10px;border:2px dashed var(--line);display:grid;place-items:center;font-size:28px;color:var(--muted)}
+.palco{position:relative;width:min(100%,330px,36vh);margin:0 auto;aspect-ratio:9/16;max-width:100%}
+.palco canvas{width:100%;height:100%;border-radius:18px;display:block;box-shadow:0 18px 40px rgba(0,0,0,.18)}
+.adesivo{position:absolute;left:12%;right:12%;border:2px dashed rgba(255,255,255,.8);border-radius:18px;display:grid;place-items:center;text-align:center;font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.25);padding:6px;pointer-events:none}
+.etiqueta{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
+.etiqueta.gravar{background:#C2362B;color:#fff;border-color:transparent}
+.lista-seq{display:flex;flex-direction:column;gap:8px}
+.item-seq{display:flex;gap:12px;align-items:center;text-align:left;justify-content:flex-start;border-radius:14px;padding:10px;font-weight:500;width:100%}
+.item-seq img{width:44px;height:78px;border-radius:7px;object-fit:cover;background:var(--line);flex:0 0 auto}
+.item-seq div{min-width:0;display:flex;flex-direction:column;gap:3px}
+.item-seq strong{font-size:15px}
+.item-seq small{color:var(--muted);font-size:12px}
+.cores{display:flex;gap:8px;flex-wrap:wrap}
+.cores button{width:36px;height:36px;min-height:36px;padding:0;border-radius:50%;border:2px solid var(--line)}
+.cores button[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:2px}
+.pergunta-gate{display:flex;flex-direction:column;gap:8px;padding-left:14px;border-left:3px solid var(--amarelo)}
+.gerando{font-size:13px;color:var(--muted);white-space:pre-wrap;max-height:120px;overflow:auto;font-family:ui-monospace,Menlo,monospace}
+
+/* Barra de baixo */
+.base{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:10px;align-items:center;pointer-events:none}
+.acao{pointer-events:auto;width:min(100%,560px)}
+.acao .btn,.acao button{width:100%;min-height:52px;font-size:16px;box-shadow:0 10px 26px rgba(0,0,0,.22)}
+nav.abas{pointer-events:auto;display:flex;gap:2px;padding:6px;border-radius:999px;background:color-mix(in srgb,var(--surface) 72%,transparent);border:1px solid var(--line);backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);box-shadow:0 10px 30px rgba(0,0,0,.18)}
+nav.abas button{border:0;background:transparent;flex-direction:column;gap:3px;padding:7px 12px;min-height:50px;font-size:11px;font-weight:600;color:var(--muted);border-radius:999px}
+nav.abas button svg{width:22px;height:22px}
+nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
+.digitando .base{display:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 16px;border-radius:14px;font-weight:600;font-size:14px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
+
+/* Teleprompter */
+.tele{position:fixed;inset:0;z-index:80;background:#0F0F10;color:#F5F3EE;display:flex;flex-direction:column;padding:calc(16px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.tele .rolo{flex:1;overflow:hidden;position:relative}
+.tele .txt{font:700 34px/1.35 var(--f-corpo);white-space:pre-wrap;padding:40vh 0}
+.tele .txt b{background:var(--amarelo);color:#0F0F10;padding:0 4px}
+.tele .ctrl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tele button{background:#1E1E21;color:#F5F3EE;border-color:#333}
+.tele .mostrar{font-size:14px;color:#FFD400;font-weight:600}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media (min-width:900px){.app{max-width:980px}.duas{display:grid;grid-template-columns:360px 1fr;gap:20px;align-items:start}.duas>.fixa{position:sticky;top:20px}}
+</style>
+
+<div class="app">
+  <header class="topo">
+    <div class="marca">Motor <i>Stories</i></div>
+    <span class="selo" id="selo">ESCRITA</span>
+  </header>
+
+  <!-- HOJE -->
+  <section data-aba="hoje" class="pilha">
+    <div class="cartao">
+      <div class="linha" style="justify-content:space-between">
+        <div class="ofensiva"><b id="ofensivaN">0</b><span class="muted" id="ofensivaTxt">dias seguidos postando</span></div>
+        <span class="muted" id="hojeData"></span>
+      </div>
+      <div class="semana" id="semanaHoje"></div>
+    </div>
+    <div class="cartao" id="hojeCartao"></div>
+  </section>
+
+  <!-- CRIAR -->
+  <section data-aba="criar" class="pilha" hidden>
+    <div class="cartao so-escrita">
+      <h2>O que vira story hoje?</h2>
+      <div class="seg" id="entradaSeg" role="group" aria-label="De onde vem a sequência">
+        <button data-e="dia" aria-pressed="true">Contar o dia</button>
+        <button data-e="caixinha" aria-pressed="false">Respostas da caixinha</button>
+        <button data-e="carrossel" aria-pressed="false">Do carrossel</button>
+        <button data-e="opiniao" aria-pressed="false">Sugere você</button>
+        <button data-e="semana" aria-pressed="false">Semana inteira</button>
+      </div>
+      <p class="dica" id="entradaDica"></p>
+      <label for="entradaTxt"><span id="entradaRotulo">O que aconteceu</span>
+        <textarea id="entradaTxt" placeholder=""></textarea>
+      </label>
+      <div class="pergunta-gate" id="gate" hidden>
+        <h3>Preciso de mais coisa sua</h3>
+        <p class="dica">Responda solto, do jeito que vier. Não precisa organizar.</p>
+        <ol id="gateLista" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px"></ol>
+        <label for="gateTxt">Suas respostas<textarea id="gateTxt"></textarea></label>
+      </div>
+      <div class="linha">
+        <label style="flex:1 1 150px" for="optEstilo">Visual
+          <select id="optEstilo"><option value="natural">Natural (cara de Instagram)</option><option value="misto" selected>Misto</option><option value="bonito">Mais bonito</option></select>
+        </label>
+        <label style="flex:1 1 150px" for="optGravar">Gravar
+          <select id="optGravar"><option value="sim" selected>Pode ter story gravado</option><option value="nao">Só imagens</option></select>
+        </label>
+        <label style="flex:1 1 120px" for="optData">Para o dia
+          <input type="date" id="optData">
+        </label>
+      </div>
+      <div class="linha">
+        <button class="pri" id="btGerar">Escrever sequência</button>
+        <button id="btPorMim">Escreve por mim</button>
+        <button id="btPular" hidden>Escrever mesmo assim</button>
+        <button class="fant" id="btParar" hidden>Parar</button>
+      </div>
+      <div class="gerando" id="gerando" hidden></div>
+      <p class="aviso" id="semSample" hidden>Para escrever com o Claude, abra este Motor dentro do app do Claude.</p>
+    </div>
+
+    <div class="cartao">
+      <h3>Sem o Claude</h3>
+      <div class="linha">
+        <button id="btEmBranco">Escrever eu mesmo</button>
+        <button id="btColarJson">Colar JSON</button>
+        <button class="so-fotos" id="btColarAzul">Colar do Motor azul</button>
+      </div>
+      <textarea id="jsonTxt" hidden placeholder='Cole aqui o JSON da sequência ({"sequencias":[...]}) ou o link do Motor azul'></textarea>
+      <button id="btImportar" hidden>Importar</button>
+    </div>
+  </section>
+
+  <!-- STORIES -->
+  <section data-aba="stories" class="pilha" hidden>
+    <div id="semSeq" class="cartao" hidden><p>Nenhuma sequência aberta. Crie uma em <b>Criar</b> ou abra pela <b>Agenda</b>.</p></div>
+    <div id="comSeq" class="pilha">
+      <div class="linha" style="justify-content:space-between">
+        <div style="min-width:0"><h2 id="seqTitulo"></h2><p class="dica" id="seqInfo"></p></div>
+      </div>
+      <div class="fita" id="fita"></div>
+      <div class="duas">
+        <div class="fixa pilha">
+          <div class="palco" id="palco"><canvas id="tela" width="1080" height="1920"></canvas><div class="adesivo" id="adesivoGuia" hidden></div></div>
+          <div class="linha" style="justify-content:center">
+            <button class="peq" id="btAnt" aria-label="Story anterior">‹</button>
+            <span class="muted" id="contador"></span>
+            <button class="peq" id="btProx" aria-label="Próximo story">›</button>
+          </div>
+        </div>
+        <div class="pilha">
+          <div class="cartao" id="editor">
+            <div class="linha">
+              <span class="etiqueta" id="etTipo"></span>
+              <button class="peq pri" id="btTele" hidden>Abrir teleprompter</button>
+              <button class="peq" id="btCopiarAdesivo" hidden>Copiar pergunta do adesivo</button>
+            </div>
+            <label for="edTexto">Texto do story <span class="dica" style="font-weight:400">— **palavra** vira marca-texto</span>
+              <textarea id="edTexto" style="min-height:110px"></textarea>
+            </label>
+            <div class="pilha" id="blocoGravar" hidden>
+              <label for="edRoteiro">Roteiro para gravar<textarea id="edRoteiro"></textarea></label>
+              <label for="edMostrar">O que mostrar na câmera<input id="edMostrar"></label>
+            </div>
+            <div class="linha">
+              <label style="flex:1 1 130px" for="edTipo">Tipo
+                <select id="edTipo"><option value="texto">Imagem com texto</option><option value="foto">Foto sua + texto</option><option value="gravar">Gravar no Instagram</option></select>
+              </label>
+              <label style="flex:1 1 130px" for="edVisual">Visual
+                <select id="edVisual"><option value="nativo">Natural (Instagram)</option><option value="manchete">Manchete</option><option value="papel">Papel</option><option value="nota">Nota</option><option value="conversa">Conversa</option></select>
+              </label>
+            </div>
+            <div class="pilha" id="blocoCor">
+              <h3>Fundo</h3>
+              <div class="cores" id="cores"></div>
+            </div>
+            <div class="linha" id="blocoFoto" hidden>
+              <label class="btn" for="edFoto" style="flex-direction:row;color:var(--fg)">Escolher foto<input type="file" id="edFoto" accept="image/*" hidden></label>
+              <button class="peq fant" id="btTirarFoto">Tirar foto</button>
+            </div>
+            <div class="linha">
+              <label style="flex:1 1 140px" for="edAdesivo">Adesivo do Instagram
+                <select id="edAdesivo"><option value="nenhum">Nenhum</option><option value="caixinha">Caixinha de perguntas</option><option value="enquete">Enquete</option><option value="quiz">Quiz</option><option value="slider">Slider de emoji</option><option value="link">Link</option></select>
+              </label>
+              <label style="flex:2 1 180px" for="edAdesivoTxt" id="rotAdesivoTxt">Pergunta do adesivo<input id="edAdesivoTxt"></label>
+            </div>
+            <label for="edOpcoes" id="rotOpcoes" hidden>Opções (separe com /)<input id="edOpcoes"></label>
+            <div class="linha">
+              <button class="peq" id="btSubir">Mover para trás</button>
+              <button class="peq" id="btDescer">Mover para frente</button>
+              <button class="peq" id="btDuplicar">Duplicar</button>
+              <button class="peq fant" id="btApagar" style="color:var(--aviso)">Apagar story</button>
+            </div>
+          </div>
+
+          <div class="cartao">
+            <h3>A sequência</h3>
+            <div class="linha">
+              <label style="flex:2 1 180px" for="sqTitulo">Nome<input id="sqTitulo"></label>
+              <label style="flex:1 1 130px" for="sqData">Dia<input type="date" id="sqData"></label>
+            </div>
+            <label for="sqEstilo">Trocar o visual de todos
+              <select id="sqEstilo"><option value="">Manter como está</option><option value="natural">Natural</option><option value="bonito">Bonito</option><option value="misto">Misto</option></select>
+            </label>
+            <div id="sqConferir" class="pilha" hidden><h3>Confira antes de postar</h3><ul id="sqConferirLista" style="margin:0;padding-left:18px"></ul></div>
+            <div id="sqRespostas" class="pilha" hidden><h3>Respostas para puxar a caixinha</h3><p class="dica">Se a caixinha vier fraca amanhã, responda uma destas como se alguém tivesse perguntado.</p><ul id="sqRespostasLista" style="margin:0;padding-left:18px"></ul></div>
+            <p class="dica" id="sqDispositivos"></p>
+            <div class="linha">
+              <button class="peq" id="btPostado">Marcar como postada</button>
+              <button class="peq fant" id="btApagarSeq" style="color:var(--aviso)">Apagar sequência</button>
+            </div>
+            <div class="linha" id="confirmaApagar" hidden><span class="aviso">Apagar esta sequência?</span><button class="peq" id="btSimApagar">Sim, apagar</button><button class="peq" id="btNaoApagar">Não</button></div>
+          </div>
+
+          <div class="cartao so-fotos">
+            <h3>Postar</h3>
+            <div class="linha">
+              <button id="btEnviarEste">Enviar só este story</button>
+              <button id="btSalvar">Salvar imagens</button>
+            </div>
+            <p class="dica">Stories marcados como <b>Gravar</b> não viram imagem: grave direto no Instagram com o teleprompter aberto. Adesivos (caixinha, enquete) você coloca no Instagram, no espaço tracejado.</p>
+            <p class="dica">Para deixar agendado de verdade: salve as imagens e programe no Meta Business Suite (Criar story → Programar).</p>
+          </div>
+          <div class="cartao so-escrita">
+            <h3>Levar para o celular</h3>
+            <p class="dica">O botão de baixo copia um link com todas as sequências de hoje em diante. No Motor Stories vermelho elas entram sozinhas.</p>
+            <button id="btBaixarAzul">Baixar as imagens daqui</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENDA -->
+  <section data-aba="agenda" class="pilha" hidden>
+    <div class="cartao">
+      <div class="linha" style="justify-content:space-between">
+        <button class="peq" id="semAnt" aria-label="Semana anterior">‹</button>
+        <h3 id="semanaRotulo"></h3>
+        <button class="peq" id="semProx" aria-label="Próxima semana">›</button>
+      </div>
+      <div class="semana" id="semanaAgenda"></div>
+    </div>
+    <div class="cartao" id="diaCartao"></div>
+    <div class="cartao so-fotos">
+      <h3>Lembrete diário</h3>
+      <p class="dica">Cria um evento que repete todo dia no seu calendário, com aviso na hora. Assim o dia não passa sem story.</p>
+      <div class="linha"><label style="flex:0 0 140px" for="horaLembrete">Horário<input type="time" id="horaLembrete" value="19:00"></label><button id="btLembrete">Adicionar ao calendário</button></div>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section data-aba="ajustes" class="pilha" hidden>
+    <div class="cartao">
+      <h3>Seu perfil nos stories</h3>
+      <label for="cfgNome">Nome<input id="cfgNome"></label>
+      <label for="cfgArroba">@ do Instagram<input id="cfgArroba" placeholder="@seuperfil"></label>
+      <div class="linha"><label class="btn" for="cfgAvatar" style="flex-direction:row;color:var(--fg)">Foto do perfil<input type="file" id="cfgAvatar" accept="image/*" hidden></label><span class="dica">Aparece no visual Conversa.</span></div>
+    </div>
+    <div class="cartao">
+      <h3>Como o Motor escreve</h3>
+      <p class="dica">Método do Ladeira (premissa em vez de promessa, escalada de atenção, super sincero, crônica) na voz de conversa do Elton Luiz, dentro do posicionamento v4. Nada de fato inventado: quando falta matéria-prima, ele pergunta antes de escrever. Toda sequência termina numa interação que puxa a do dia seguinte.</p>
+    </div>
+    <div class="cartao">
+      <h3>Dados</h3>
+      <div class="linha"><button id="btExportar">Copiar tudo (backup)</button><button class="fant" id="btLimparPostadas">Apagar sequências postadas há mais de 30 dias</button></div>
+    </div>
+  </section>
+</div>
+
+<div class="base">
+  <div class="acao" id="acao"></div>
+  <nav class="abas" aria-label="Seções">
+    <button data-ir="hoje"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/></svg>Hoje</button>
+    <button data-ir="criar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg>Criar</button>
+    <button data-ir="stories"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M9 6.5h6"/></svg>Stories</button>
+    <button data-ir="agenda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Agenda</button>
+    <button data-ir="ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14M5 17h14"/><circle cx="9" cy="7" r="2.2" fill="var(--bg)"/><circle cx="15" cy="17" r="2.2" fill="var(--bg)"/></svg>Ajustes</button>
+  </nav>
+</div>
+
+<div class="tele" id="tele" hidden>
+  <div class="ctrl"><span class="mostrar" id="teleMostrar"></span></div>
+  <div class="rolo" id="teleRolo"><div class="txt" id="teleTxt"></div></div>
+  <div class="ctrl">
+    <button id="teleRodar">Rolar</button>
+    <label style="flex:1 1 140px;color:#aaa" for="teleVel">Velocidade<input type="range" id="teleVel" min="10" max="120" value="40"></label>
+    <button id="teleFechar">Fechar</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ========== modo ========== */
+const qs = new URLSearchParams(location.search);
+const forca = qs.get('modo');
+const MODO = forca === 'fotos' ? 'fotos' : forca === 'escrita' ? 'escrita' : (window.claude ? 'escrita' : 'fotos');
+if (MODO === 'fotos') document.documentElement.classList.add('vermelho');
+const LINK_VERMELHO = 'https://danielsoaresbarboza-debug.github.io/motor-storiesV2/postar/';
+const $ = s => document.querySelector(s), $$ = s => Array.from(document.querySelectorAll(s));
+document.getElementById('selo').textContent = MODO === 'fotos' ? 'POSTAR' : 'ESCRITA';
+$$(MODO === 'fotos' ? '.so-escrita' : '.so-fotos').forEach(e => e.hidden = true);
+
+/* ========== armazenamento ========== */
+const K = { seqs:'dan_stories_seqs_v1', cfg:'dan_stories_cfg_v1', aba:'dan_stories_aba_'+MODO, ult:'dan_stories_ultimo_codigo_v1', fotos:'dan_stories_fotos_v1' };
+function ler(k, pad){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : pad; } catch(e){ return pad; } }
+function gravar(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
+let seqs = ler(K.seqs, []);
+let cfg = Object.assign({ nome:'Daniel Barboza', arroba:'', avatar:'', hora:'19:00' }, ler(K.cfg, {}));
+let fotos = ler(K.fotos, {}); // id do story -> dataURL (fica só neste aparelho)
+function salvarSeqs(){ gravar(K.seqs, seqs); agendarLink(); }
+function salvarFotos(){ if (!gravar(K.fotos, fotos)) toast('A foto ficou só até fechar o app: o espaço do aparelho para este app acabou.'); }
+
+/* ========== datas ========== */
+function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function deIso(s){ const [a,m,d] = s.split('-').map(Number); return new Date(a, m-1, d); }
+const hoje = () => iso(new Date());
+function soma(s, n){ const d = deIso(s); d.setDate(d.getDate()+n); return iso(d); }
+const DIAS = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+const DIAS3 = ['dom','seg','ter','qua','qui','sex','sáb'];
+const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function inicioSemana(s){ const d = deIso(s); const w = (d.getDay()+6)%7; d.setDate(d.getDate()-w); return iso(d); }
+function rotuloDia(s){ const d = deIso(s); return DIAS[d.getDay()]+', '+d.getDate()+' de '+MESES[d.getMonth()]; }
+
+/* ========== util ========== */
+const uid = () => Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+let toastT;
+function toast(m, ms){ let t = $('.toast'); if (!t){ t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); document.body.appendChild(t); } t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(()=>{ t.hidden = true; }, ms||3200); }
+async function copiar(txt){ try { await navigator.clipboard.writeText(txt); return true; } catch(e){ return false; } }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+/* ========== modelo de dados ========== */
+function novoStory(p){ return Object.assign({ id:uid(), tipo:'texto', visual:'nativo', texto:'', roteiro:'', mostrar:'', fundo:'', sticker:{tipo:'nenhum', texto:'', opcoes:[]} }, p||{}); }
+function normalizar(s){
+  const seq = { id: s.id || uid(), data: s.data || hoje(), titulo: (s.titulo||'Sequência').slice(0,60), gatilho: s.gatilho||'', dispositivos: s.dispositivos||[], respostasModelo: s.respostasModelo||[], conferir: s.conferir||[], status: s.status==='postado'?'postado':'planejado', criado: s.criado || Date.now(), stories: [] };
+  (s.stories||[]).forEach(st => {
+    const t = ['texto','foto','gravar'].includes(st.tipo) ? st.tipo : (st.tipo==='interacao' ? 'texto' : 'texto');
+    const v = ['nativo','manchete','papel','nota','conversa'].includes(st.visual) ? st.visual : (st.visual==='foto' ? 'nativo' : 'nativo');
+    const sk = st.sticker && typeof st.sticker === 'object' ? st.sticker : {};
+    seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'',
+      sticker: { tipo: ['caixinha','enquete','quiz','slider','link'].includes(sk.tipo) ? sk.tipo : 'nenhum', texto: sk.texto||'', opcoes: Array.isArray(sk.opcoes) ? sk.opcoes.slice(0,4) : [] } }));
+  });
+  if (!seq.stories.length) seq.stories.push(novoStory());
+  return seq;
+}
+let atual = null, idx = 0;
+function abrirSeq(id, i){ atual = seqs.find(s => s.id === id) || null; idx = i||0; ir('stories'); renderStories(); }
+
+/* ========== desenho dos stories (1080 × 1920) ========== */
+const W = 1080, H = 1920, TOPO = 270, BASE = 1560, ADES = [1130, 1520];
+const AM = '#FFD400', PR = '#0F0F10', PA = '#F5F3EE';
+const CORES_NATIVO = ['#0F0F10','#FFD400','#F5F3EE','#1B2A6B','#C2362B','#2E5E4E','grad'];
+const F_SANS = '"Instrument Sans", Roboto, "Segoe UI", Helvetica, Arial, sans-serif';
+const F_SERIF = '"Instrument Serif", Georgia, serif';
+const imgCache = {};
+function imagem(src){ if (!src) return null; if (imgCache[src]) return imgCache[src].complete ? imgCache[src] : null; const im = new Image(); im.onload = () => { redesenhar(); if (abaAtual === 'stories' && atual) renderFita(); }; im.src = src; imgCache[src] = im; return null; }
+function lum(hex){ if (!hex || hex[0] !== '#') return 0; const n = parseInt(hex.slice(1),16); const r=(n>>16)&255,g=(n>>8)&255,b=n&255; return (0.299*r+0.587*g+0.114*b)/255; }
+
+function tokens(texto){ // parágrafos → palavras; cada palavra tem partes com ou sem marca (**…**)
+  const paras = String(texto||'').replace(/\r/g,'').split('\n');
+  let b = false;
+  return paras.map(p => {
+    const words = []; let cur = null;
+    p.split(/(\*\*)/).forEach(seg => {
+      if (seg === '**'){ b = !b; return; }
+      seg.split(/(\s+)/).forEach(pc => {
+        if (!pc) return;
+        if (/^\s+$/.test(pc)){ cur = null; return; }
+        if (!cur){ cur = { partes:[] }; words.push(cur); }
+        cur.partes.push({ t: pc, b });
+      });
+    });
+    return words;
+  });
+}
+function medir(ctx, w){ let x = 0; w.partes.forEach(pt => { pt.tw = ctx.measureText(pt.t).width; x += pt.tw; }); w.tw = x; return x; }
+function quebra(ctx, paras, maxW){
+  const linhas = []; const esp = ctx.measureText(' ').width;
+  paras.forEach(p => {
+    if (!p.length){ linhas.push({ toks:[], w:0, vazio:true }); return; }
+    let cur = [], cw = 0;
+    p.forEach(t => { const tw = medir(ctx, t); const nw = cur.length ? cw + esp + tw : tw; if (nw > maxW && cur.length){ linhas.push({ toks:cur, w:cw }); cur = [t]; cw = tw; } else { cur.push(t); cw = nw; } });
+    if (cur.length) linhas.push({ toks:cur, w:cw });
+  });
+  return linhas;
+}
+function ajustar(ctx, texto, o){ // acha o maior tamanho que cabe
+  const paras = tokens(texto);
+  const calc = s => { const font = (o.peso||700)+' '+s+'px '+(o.fam||F_SANS); ctx.font = font; const ls = quebra(ctx, paras, o.maxW); const lh = s*(o.lh||1.18); return { font, linhas: ls, s, lh, h: ls.reduce((a,l) => a + (l.vazio ? lh*0.5 : lh), 0) }; };
+  for (let s = o.max; s >= o.min; s -= 4){ const r = calc(s); if (r.h <= o.maxH) return r; }
+  return calc(o.min);
+}
+function rr(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function escrever(ctx, L, x, y, o){ // o: alinhar, cor, marcaFundo, marcaCor, caixa
+  ctx.textBaseline = 'alphabetic'; ctx.font = L.font;
+  const esp = ctx.measureText(' ').width; let yy = y;
+  L.linhas.forEach(l => {
+    if (l.vazio){ yy += L.lh*0.5; return; }
+    let xx = o.alinhar === 'centro' ? x - l.w/2 : x;
+    const base = yy + L.s*0.92;
+    if (o.caixa){ ctx.fillStyle = o.caixa; rr(ctx, xx-22, yy-6, l.w+44, L.lh+4, 18); ctx.fill(); }
+    l.toks.forEach((w, i) => {
+      w.partes.forEach((pt, j) => {
+        if (pt.b && o.marcaFundo){
+          const ult = j === w.partes.length-1; const nxt = l.toks[i+1];
+          const ext = ult && nxt && nxt.partes[0].b ? esp : 0;
+          ctx.fillStyle = o.marcaFundo; ctx.fillRect(xx-(j===0?6:0), yy+L.s*0.12, pt.tw+(j===0?6:0)+(ult?6:0)+ext, L.s*0.98);
+        }
+        ctx.fillStyle = pt.b && o.marcaFundo ? o.marcaCor : o.cor;
+        ctx.fillText(pt.t, xx, base); xx += pt.tw;
+      });
+      xx += esp;
+    });
+    yy += L.lh;
+  });
+  return yy;
+}
+function areaTexto(st){ return st.sticker && st.sticker.tipo !== 'nenhum' ? [TOPO+40, ADES[0]-50] : [TOPO+40, BASE]; }
+function fundoNativo(ctx, cor){
+  if (cor === 'grad'){ const g = ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#1B2A6B'); g.addColorStop(.55,'#C2362B'); g.addColorStop(1,'#FFD400'); ctx.fillStyle = g; }
+  else ctx.fillStyle = cor;
+  ctx.fillRect(0,0,W,H);
+}
+function desenhar(ctx, st, o){
+  o = o || {};
+  ctx.clearRect(0,0,W,H); ctx.save();
+  const [y0, y1] = areaTexto(st);
+  if (st.tipo === 'gravar'){
+    ctx.fillStyle = '#121214'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#C2362B'; ctx.beginPath(); ctx.arc(140, 330, 26, 0, 7); ctx.fill();
+    ctx.fillStyle = '#F5F3EE'; ctx.font = '700 40px '+F_SANS; ctx.fillText('GRAVAR NO INSTAGRAM', 190, 345);
+    ctx.fillStyle = '#9C9AA0'; ctx.font = '500 34px '+F_SANS; ctx.fillText('Não vira imagem. Abra o teleprompter.', 96, 420);
+    const L = ajustar(ctx, st.roteiro || st.texto || 'Escreva o roteiro', { max:64, min:36, maxW:W-192, maxH:1100, peso:600 });
+    escrever(ctx, L, 96, 500, { cor:'#F5F3EE', marcaFundo:AM, marcaCor:PR });
+    if (st.mostrar){ ctx.fillStyle = AM; ctx.font = '600 34px '+F_SANS; const L2 = ajustar(ctx, 'Mostrar: '+st.mostrar, {max:34,min:28,maxW:W-192,maxH:200,peso:600}); escrever(ctx, L2, 96, 1660, {cor:AM}); }
+    ctx.restore(); return;
+  }
+  const v = st.visual;
+  if (st.tipo === 'foto'){
+    const src = fotos[st.id]; const im = imagem(src);
+    if (im){ const r = Math.max(W/im.width, H/im.height); const w = im.width*r, h = im.height*r; ctx.drawImage(im, (W-w)/2, (H-h)/2, w, h); const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(0,0,0,.35)'); g.addColorStop(.3,'rgba(0,0,0,0)'); g.addColorStop(.75,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.35)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H); }
+    else { ctx.fillStyle = '#2A2A2E'; ctx.fillRect(0,0,W,H); ctx.fillStyle = '#6E6E75'; ctx.font = '600 44px '+F_SANS; ctx.textAlign = 'center'; ctx.fillText(o.exportar ? '' : 'Escolha uma foto sua', W/2, H/2); ctx.textAlign = 'left'; }
+    if (st.texto.trim()){
+      const L = ajustar(ctx, st.texto, { max:68, min:40, maxW:W-260, maxH:(y1-y0)*0.7, peso:700, lh:1.32 });
+      const yTop = st.sticker.tipo !== 'nenhum' ? y0+40 : Math.max(y0, (y0+y1)/2 - L.h/2 + 260);
+      escrever(ctx, L, W/2, yTop, { alinhar:'centro', cor:PR, caixa:'#FFFFFF', marcaFundo:AM, marcaCor:PR });
+    }
+    ctx.restore(); return;
+  }
+  if (v === 'nativo'){
+    const cor = st.fundo || '#0F0F10'; fundoNativo(ctx, cor);
+    const claro = cor !== 'grad' && lum(cor) > 0.6; const corTxt = claro ? PR : '#FFFFFF';
+    const mf = cor === '#FFD400' ? PR : AM, mc = cor === '#FFD400' ? AM : PR;
+    const L = ajustar(ctx, st.texto, { max:84, min:44, maxW:W-200, maxH:y1-y0, peso:700, lh:1.24 });
+    const yTop = st.sticker.tipo !== 'nenhum' ? y0 + Math.max(0,(y1-y0-L.h)*0.35) : y0 + (y1-y0-L.h)/2;
+    escrever(ctx, L, W/2, yTop, { alinhar:'centro', cor:corTxt, marcaFundo:mf, marcaCor:mc });
+  } else if (v === 'manchete' || v === 'papel'){
+    const escuro = v === 'manchete'; ctx.fillStyle = escuro ? PR : PA; ctx.fillRect(0,0,W,H);
+    const fg = escuro ? '#F5F3EE' : PR; const mut = escuro ? 'rgba(245,243,238,.6)' : 'rgba(15,15,16,.55)';
+    ctx.fillStyle = AM; ctx.beginPath(); ctx.arc(108, TOPO+24, 12, 0, 7); ctx.fill();
+    ctx.fillStyle = mut; ctx.font = '600 30px '+F_SANS; ctx.fillText((cfg.nome||'').toUpperCase(), 136, TOPO+35);
+    const L = ajustar(ctx, st.texto, { max:104, min:48, maxW:W-192, maxH:(y1-y0)-120, peso:700, lh:1.12 });
+    const yTop = st.sticker.tipo !== 'nenhum' ? y0+110 : Math.max(y0+110, y0 + (y1-y0-L.h)/2);
+    const yf = escrever(ctx, L, 96, yTop, { cor:fg, marcaFundo:AM, marcaCor:PR });
+    ctx.fillStyle = escuro ? AM : PR; ctx.fillRect(96, yf+36, 120, 10);
+  } else if (v === 'nota'){
+    ctx.fillStyle = '#FBFAF6'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#C79A00'; ctx.font = '500 40px '+F_SANS; ctx.fillText('‹ Notas', 70, TOPO+10);
+    ctx.fillStyle = '#9A978F'; ctx.font = '500 28px '+F_SANS; ctx.textAlign = 'center'; const d = new Date(); ctx.fillText(d.getDate()+' de '+MESES[d.getMonth()]+' de '+d.getFullYear(), W/2, TOPO+110); ctx.textAlign = 'left';
+    const L = ajustar(ctx, st.texto, { max:66, min:40, maxW:W-180, maxH:(y1-y0)-160, peso:600, lh:1.32 });
+    escrever(ctx, L, 90, y0+150, { cor:'#1C1B19', marcaFundo:'#FFE45C', marcaCor:'#1C1B19' });
+  } else if (v === 'conversa'){
+    const cor = st.fundo || AM; fundoNativo(ctx, cor);
+    ctx.font = '500 50px '+F_SANS;
+    const L = ajustar(ctx, st.texto, { max:54, min:36, maxW:W-280, maxH:(y1-y0)-260, peso:500, lh:1.36 });
+    const ch = L.h + 230; const cy = st.sticker.tipo !== 'nenhum' ? y0 : y0 + (y1-y0-ch)/2;
+    ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = 'rgba(0,0,0,.18)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 16; rr(ctx, 70, cy, W-140, ch, 44); ctx.fill(); ctx.shadowColor = 'transparent';
+    const av = imagem(cfg.avatar);
+    ctx.save(); ctx.beginPath(); ctx.arc(176, cy+106, 52, 0, 7); ctx.clip();
+    if (av){ const r = Math.max(104/av.width,104/av.height); ctx.drawImage(av, 176-av.width*r/2, cy+106-av.height*r/2, av.width*r, av.height*r); }
+    else { ctx.fillStyle = PR; ctx.fillRect(120, cy+50, 112, 112); ctx.fillStyle = AM; ctx.font = '700 50px '+F_SANS; ctx.textAlign='center'; ctx.fillText((cfg.nome||'D')[0].toUpperCase(), 176, cy+124); ctx.textAlign='left'; }
+    ctx.restore();
+    ctx.fillStyle = PR; ctx.font = '700 38px '+F_SANS; ctx.fillText(cfg.nome||'', 250, cy+98);
+    ctx.fillStyle = '#6E6E75'; ctx.font = '500 32px '+F_SANS; ctx.fillText(cfg.arroba||'', 250, cy+142);
+    escrever(ctx, L, 140, cy+200, { cor:'#16161A', marcaFundo:AM, marcaCor:PR });
+  }
+  ctx.restore();
+}
+function exportavel(st){ return st.tipo !== 'gravar' && !(st.tipo === 'foto' && !fotos[st.id]) && (st.texto.trim() || st.tipo === 'foto'); }
+const telaAux = document.createElement('canvas'); telaAux.width = W; telaAux.height = H;
+const miniC = document.createElement('canvas'); miniC.width = 216; miniC.height = 384;
+function miniatura(st){ const c = telaAux.getContext('2d'); desenhar(c, st); const m = miniC.getContext('2d'); m.drawImage(telaAux, 0, 0, 216, 384); return miniC.toDataURL('image/jpeg', .72); }
+function pngBlob(st){ return new Promise(res => { const c = telaAux.getContext('2d'); desenhar(c, st, { exportar:true }); telaAux.toBlob(b => res(b), 'image/png'); }); }
+function nomeArq(seq, i){ return seq.data+'_story-'+String(i+1).padStart(2,'0')+'.png'; }
+
+/* ========== abas ========== */
+let abaAtual = 'hoje';
+function ir(a, semHist){
+  abaAtual = a; gravar(K.aba, a);
+  $$('section[data-aba]').forEach(s => s.hidden = s.dataset.aba !== a);
+  $$('nav.abas button').forEach(b => b.setAttribute('aria-current', b.dataset.ir === a ? 'page' : 'false'));
+  if (a === 'hoje') renderHoje(); if (a === 'agenda') renderAgenda(); if (a === 'stories') renderStories(); if (a === 'ajustes') renderAjustes();
+  renderAcao(); window.scrollTo(0,0);
+  if (!semHist) try { history.pushState({ aba:a }, ''); } catch(e){}
+}
+$$('nav.abas button').forEach(b => b.onclick = () => ir(b.dataset.ir));
+window.addEventListener('popstate', e => { if (!$('#tele').hidden){ fecharTele(); return; } ir((e.state && e.state.aba) || 'hoje', true); });
+
+/* ========== ofensiva e semana ========== */
+function porDia(d){ return seqs.filter(s => s.data === d); }
+function estadoDia(d){ const l = porDia(d); if (!l.length) return ''; return l.some(s => s.status === 'postado') ? 'post' : 'plan'; }
+function ofensiva(){ let d = hoje(); if (estadoDia(d) !== 'post') d = soma(d,-1); let n = 0; while (estadoDia(d) === 'post'){ n++; d = soma(d,-1); } return n; }
+function semanaHTML(ini, sel){
+  let h = ''; for (let i=0;i<7;i++){ const d = soma(ini,i), dd = deIso(d); const e = estadoDia(d);
+    h += `<button class="dia ${e} ${d===hoje()?'hoje':''} ${d===sel?'sel':''}" data-d="${d}" aria-label="${rotuloDia(d)}"><small>${DIAS3[dd.getDay()]}</small><b>${dd.getDate()}</b><span class="pt"></span></button>`; }
+  return h;
+}
+function linhaSeq(s){
+  const st = s.stories[0]; const n = s.stories.length, g = s.stories.filter(x => x.tipo==='gravar').length;
+  return `<button class="item-seq" data-abrir="${s.id}"><img alt="" src="${miniatura(st)}"><div><strong>${esc(s.titulo)}</strong><small>${n} ${n===1?'story':'stories'}${g?' · '+g+' para gravar':''} · ${s.status==='postado'?'postada':'falta postar'}</small></div></button>`;
+}
+function ligarLista(raiz){ raiz.querySelectorAll('[data-abrir]').forEach(b => b.onclick = () => abrirSeq(b.dataset.abrir)); }
+
+function renderHoje(){
+  const n = ofensiva(); $('#ofensivaN').textContent = n;
+  $('#ofensivaTxt').textContent = n === 1 ? 'dia seguido postando' : 'dias seguidos postando';
+  $('#hojeData').textContent = rotuloDia(hoje());
+  const sh = $('#semanaHoje'); sh.innerHTML = semanaHTML(inicioSemana(hoje())); sh.querySelectorAll('.dia').forEach(b => b.onclick = () => { semSel = b.dataset.d; semIni = inicioSemana(semSel); ir('agenda'); });
+  const l = porDia(hoje()); const c = $('#hojeCartao');
+  if (l.length){
+    c.innerHTML = `<h3>Hoje</h3><div class="lista-seq">${l.map(linhaSeq).join('')}</div>`;
+    ligarLista(c);
+  } else {
+    const prox = seqs.filter(s => s.data > hoje() && s.status !== 'postado').sort((a,b) => a.data < b.data ? -1 : 1)[0];
+    c.innerHTML = `<h2>Hoje ainda não tem story.</h2><p class="muted">Um story simples hoje vale mais que um perfeito amanhã.</p>
+      <div class="linha">${MODO==='escrita' ? '<button class="pri" data-q="porMim">Escreve por mim</button><button data-q="dia">Contar o dia</button>' : ''}<button data-q="branco">Escrever eu mesmo</button>${prox ? '<button data-q="puxar">Usar a de '+DIAS[deIso(prox.data).getDay()]+'</button>' : ''}</div>`;
+    c.querySelectorAll('[data-q]').forEach(b => b.onclick = () => {
+      const q = b.dataset.q;
+      if (q === 'branco') emBranco(hoje());
+      else if (q === 'puxar'){ prox.data = hoje(); salvarSeqs(); abrirSeq(prox.id); }
+      else if (q === 'porMim'){ escolherEntrada('opiniao'); $('#entradaTxt').value = ''; $('#optData').value = hoje(); ir('criar'); gerar(true); }
+      else { escolherEntrada(q); $('#optData').value = hoje(); ir('criar'); }
+    });
+  }
+}
+
+let semIni = inicioSemana(hoje()), semSel = hoje();
+function renderAgenda(){
+  const fim = soma(semIni,6); const a = deIso(semIni), b = deIso(fim);
+  $('#semanaRotulo').textContent = a.getDate()+' '+MESES[a.getMonth()]+' – '+b.getDate()+' '+MESES[b.getMonth()];
+  const sa = $('#semanaAgenda'); sa.innerHTML = semanaHTML(semIni, semSel);
+  sa.querySelectorAll('.dia').forEach(x => x.onclick = () => { semSel = x.dataset.d; renderAgenda(); });
+  const l = porDia(semSel); const c = $('#diaCartao');
+  c.innerHTML = `<h3>${rotuloDia(semSel)}</h3>` + (l.length ? `<div class="lista-seq">${l.map(linhaSeq).join('')}</div>` : '<p class="muted">Nada planejado.</p>') +
+    `<div class="linha">${MODO==='escrita' ? '<button class="peq pri" data-q="criar">Criar para este dia</button>' : ''}<button class="peq" data-q="branco">Escrever eu mesmo</button></div>`;
+  ligarLista(c);
+  c.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { if (b.dataset.q === 'branco') emBranco(semSel); else { $('#optData').value = semSel; ir('criar'); } });
+  $('#horaLembrete').value = cfg.hora || '19:00';
+}
+$('#semAnt').onclick = () => { semIni = soma(semIni,-7); semSel = semIni; renderAgenda(); };
+$('#semProx').onclick = () => { semIni = soma(semIni,7); semSel = semIni; renderAgenda(); };
+
+/* ========== editor da sequência ========== */
+const tela = $('#tela'), tctx = tela.getContext('2d');
+let editando = false;
+function redesenhar(){ if (abaAtual === 'stories' && atual && atual.stories[idx]) { desenhar(tctx, atual.stories[idx]); guiaAdesivo(); } }
+function guiaAdesivo(){
+  const st = atual.stories[idx], g = $('#adesivoGuia'); const t = st.sticker.tipo;
+  if (t === 'nenhum' || st.tipo === 'gravar'){ g.hidden = true; return; }
+  g.hidden = false; g.style.top = (ADES[0]/H*100)+'%'; g.style.height = ((ADES[1]-ADES[0])/H*100)+'%';
+  const nomes = { caixinha:'Caixinha', enquete:'Enquete', quiz:'Quiz', slider:'Slider', link:'Link' };
+  g.textContent = 'Adesivo: ' + nomes[t] + (st.sticker.texto ? ' — "'+st.sticker.texto+'"' : '') + (st.sticker.opcoes.length ? ' ('+st.sticker.opcoes.join(' / ')+')' : '') + ' · coloque no Instagram';
+}
+function renderFita(){
+  const f = $('#fita');
+  f.innerHTML = atual.stories.map((st,i) => `<button class="mini" data-i="${i}" aria-current="${i===idx}"><img alt="Story ${i+1}" src="${miniatura(st)}"><span>${i+1}${st.tipo==='gravar'?' · gravar':''}</span></button>`).join('') +
+    `<button class="mini add" id="btNovoStory"><div class="mais">+</div><span>novo</span></button>`;
+  f.querySelectorAll('.mini[data-i]').forEach(b => b.onclick = () => { idx = +b.dataset.i; renderStories(); });
+  $('#btNovoStory').onclick = () => { atual.stories.push(novoStory({ visual: atual.stories[idx] ? atual.stories[idx].visual : 'nativo', fundo: atual.stories[idx] ? atual.stories[idx].fundo : '' })); idx = atual.stories.length-1; salvarSeqs(); renderStories(); $('#edTexto').focus(); };
+}
+function renderStories(){
+  const tem = !!atual; $('#semSeq').hidden = tem; $('#comSeq').hidden = !tem; if (!tem){ renderAcao(); return; }
+  if (idx >= atual.stories.length) idx = atual.stories.length-1;
+  const st = atual.stories[idx];
+  $('#seqTitulo').textContent = atual.titulo;
+  const g = atual.stories.filter(x=>x.tipo==='gravar').length;
+  $('#seqInfo').textContent = rotuloDia(atual.data) + ' · ' + atual.stories.length + ' stories' + (g ? ' · '+g+' para gravar' : '') + ' · ' + (atual.status==='postado'?'postada':'falta postar');
+  $('#contador').textContent = (idx+1)+' de '+atual.stories.length;
+  renderFita();
+  editando = true;
+  $('#edTexto').value = st.texto; $('#edRoteiro').value = st.roteiro; $('#edMostrar').value = st.mostrar;
+  $('#edTipo').value = st.tipo; $('#edVisual').value = st.visual;
+  $('#edAdesivo').value = st.sticker.tipo; $('#edAdesivoTxt').value = st.sticker.texto; $('#edOpcoes').value = st.sticker.opcoes.join(' / ');
+  $('#sqTitulo').value = atual.titulo; $('#sqData').value = atual.data; $('#sqEstilo').value = '';
+  editando = false;
+  const et = $('#etTipo'); et.className = 'etiqueta' + (st.tipo==='gravar'?' gravar':''); et.textContent = st.tipo==='gravar' ? 'Gravar no Instagram' : st.tipo==='foto' ? 'Foto sua' : 'Imagem';
+  $('#blocoGravar').hidden = st.tipo !== 'gravar'; $('#btTele').hidden = st.tipo !== 'gravar';
+  $('#blocoFoto').hidden = st.tipo !== 'foto';
+  $('#edVisual').closest('label').hidden = st.tipo !== 'texto';
+  $('#blocoCor').hidden = !(st.tipo === 'texto' && (st.visual === 'nativo' || st.visual === 'conversa'));
+  const ad = st.sticker.tipo; $('#rotAdesivoTxt').hidden = ad === 'nenhum'; $('#rotOpcoes').hidden = !(ad === 'enquete' || ad === 'quiz');
+  $('#rotAdesivoTxt').firstChild.textContent = ad === 'link' ? 'Texto do link' : 'Pergunta do adesivo';
+  $('#btCopiarAdesivo').hidden = ad === 'nenhum' || !st.sticker.texto;
+  const cores = $('#cores'); const atualCor = st.fundo || (st.visual==='conversa' ? AM : '#0F0F10');
+  cores.innerHTML = CORES_NATIVO.map(c => `<button data-c="${c}" aria-pressed="${c===atualCor}" aria-label="Fundo ${c==='grad'?'degradê':c}" style="background:${c==='grad'?'linear-gradient(135deg,#1B2A6B,#C2362B,#FFD400)':c}"></button>`).join('');
+  cores.querySelectorAll('button').forEach(b => b.onclick = () => { st.fundo = b.dataset.c; mudou(true); renderStories(); });
+  const cf = atual.conferir.filter(Boolean), rm = atual.respostasModelo.filter(Boolean);
+  $('#sqConferir').hidden = !cf.length; $('#sqConferirLista').innerHTML = cf.map(x => '<li>'+esc(x)+'</li>').join('');
+  $('#sqRespostas').hidden = !rm.length; $('#sqRespostasLista').innerHTML = rm.map(x => '<li>'+esc(x)+'</li>').join('');
+  $('#sqDispositivos').textContent = atual.dispositivos.length ? 'Recursos usados: ' + atual.dispositivos.join(', ') + '.' : '';
+  $('#btPostado').textContent = atual.status === 'postado' ? 'Desmarcar postada' : 'Marcar como postada';
+  $('#confirmaApagar').hidden = true;
+  redesenhar(); renderAcao();
+}
+let tMini;
+function mudou(redes){ salvarSeqs(); if (redes) redesenhar(); clearTimeout(tMini); tMini = setTimeout(() => { if (abaAtual==='stories' && atual) renderFita(); }, 500); }
+function st(){ return atual.stories[idx]; }
+$('#edTexto').oninput = e => { if (editando) return; st().texto = e.target.value; mudou(true); };
+$('#edRoteiro').oninput = e => { st().roteiro = e.target.value; mudou(true); };
+$('#edMostrar').oninput = e => { st().mostrar = e.target.value; mudou(true); };
+$('#edTipo').onchange = e => { st().tipo = e.target.value; mudou(); renderStories(); };
+$('#edVisual').onchange = e => { st().visual = e.target.value; st().fundo = ''; mudou(); renderStories(); };
+$('#edAdesivo').onchange = e => { st().sticker.tipo = e.target.value; if (e.target.value==='enquete' && !st().sticker.opcoes.length) st().sticker.opcoes = ['Sim','Não']; mudou(); renderStories(); };
+$('#edAdesivoTxt').oninput = e => { st().sticker.texto = e.target.value; salvarSeqs(); guiaAdesivo(); $('#btCopiarAdesivo').hidden = !e.target.value; };
+$('#edOpcoes').oninput = e => { st().sticker.opcoes = e.target.value.split('/').map(x=>x.trim()).filter(Boolean).slice(0,4); salvarSeqs(); guiaAdesivo(); };
+$('#btCopiarAdesivo').onclick = async () => { toast(await copiar(st().sticker.texto) ? 'Pergunta copiada. Cole no adesivo do Instagram.' : 'Não deu para copiar. Selecione o texto no campo.'); };
+$('#btAnt').onclick = () => { if (idx>0){ idx--; renderStories(); } };
+$('#btProx').onclick = () => { if (idx<atual.stories.length-1){ idx++; renderStories(); } };
+$('#btSubir').onclick = () => { if (idx>0){ const a = atual.stories; [a[idx-1],a[idx]]=[a[idx],a[idx-1]]; idx--; mudou(); renderStories(); } };
+$('#btDescer').onclick = () => { const a = atual.stories; if (idx<a.length-1){ [a[idx+1],a[idx]]=[a[idx],a[idx+1]]; idx++; mudou(); renderStories(); } };
+$('#btDuplicar').onclick = () => { const c = JSON.parse(JSON.stringify(st())); c.id = uid(); atual.stories.splice(idx+1,0,c); idx++; mudou(); renderStories(); };
+$('#btApagar').onclick = () => { if (atual.stories.length === 1){ toast('A sequência precisa de pelo menos um story.'); return; } delete fotos[st().id]; atual.stories.splice(idx,1); if (idx>0) idx--; salvarFotos(); mudou(); renderStories(); };
+$('#sqTitulo').oninput = e => { atual.titulo = e.target.value; salvarSeqs(); $('#seqTitulo').textContent = atual.titulo; };
+$('#sqData').onchange = e => { if (e.target.value){ atual.data = e.target.value; salvarSeqs(); renderStories(); } };
+$('#sqEstilo').onchange = e => { aplicarEstilo(atual, e.target.value); mudou(); renderStories(); };
+$('#btPostado').onclick = () => { atual.status = atual.status === 'postado' ? 'planejado' : 'postado'; salvarSeqs(); renderStories(); if (atual.status==='postado') toast(ofensiva()+' '+(ofensiva()===1?'dia seguido':'dias seguidos')+'. Amanhã tem mais.'); };
+$('#btApagarSeq').onclick = () => { $('#confirmaApagar').hidden = false; };
+$('#btNaoApagar').onclick = () => { $('#confirmaApagar').hidden = true; };
+$('#btSimApagar').onclick = () => { atual.stories.forEach(x => delete fotos[x.id]); seqs = seqs.filter(s => s !== atual); atual = null; salvarFotos(); salvarSeqs(); ir('hoje'); };
+function aplicarEstilo(seq, estilo){
+  if (!estilo) return; const bonitos = ['manchete','papel','nota','conversa'];
+  seq.stories.forEach((x,i) => { if (x.tipo !== 'texto') return; if (estilo === 'natural') x.visual = 'nativo'; else if (estilo === 'bonito') x.visual = bonitos[i % bonitos.length]; else x.visual = i % 2 ? bonitos[(i>>1) % bonitos.length] : 'nativo'; x.fundo = ''; });
+}
+function lerFoto(arq, max){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, max/Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width*k); c.height = Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg', .82)); }; im.onerror = rej; im.src = r.result; }; r.onerror = rej; r.readAsDataURL(arq); }); }
+$('#edFoto').onchange = async e => { const f = e.target.files[0]; if (!f) return; fotos[st().id] = await lerFoto(f, 1600); salvarFotos(); e.target.value = ''; mudou(true); renderStories(); };
+$('#btTirarFoto').onclick = () => { delete fotos[st().id]; salvarFotos(); mudou(true); renderStories(); };
+$('#btTirarFoto').textContent = 'Tirar a foto';
+
+/* ========== teleprompter ========== */
+let teleRaf = null, teleY = 0, teleUlt = 0, wake = null;
+$('#btTele').onclick = abrirTele;
+function abrirTele(){
+  const s = st(); const txt = esc(s.roteiro || s.texto).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  $('#teleTxt').innerHTML = txt; $('#teleMostrar').textContent = s.mostrar ? 'Mostrar: '+s.mostrar : 'Grave no Instagram com esta tela ao lado.';
+  $('#tele').hidden = false; teleY = 0; $('#teleRolo').scrollTop = 0; $('#teleRodar').textContent = 'Rolar';
+  try { navigator.wakeLock && navigator.wakeLock.request('screen').then(w => wake = w).catch(()=>{}); } catch(e){}
+  try { history.pushState({ aba: abaAtual, tele:1 }, ''); } catch(e){}
+}
+function fecharTele(){ $('#tele').hidden = true; cancelAnimationFrame(teleRaf); teleRaf = null; try { wake && wake.release(); } catch(e){} wake = null; }
+$('#teleFechar').onclick = () => { fecharTele(); try { history.back(); } catch(e){} };
+$('#teleRodar').onclick = () => {
+  if (teleRaf){ cancelAnimationFrame(teleRaf); teleRaf = null; $('#teleRodar').textContent = 'Rolar'; return; }
+  $('#teleRodar').textContent = 'Pausar'; teleUlt = performance.now(); teleY = $('#teleRolo').scrollTop;
+  const passo = t => { const dt = (t - teleUlt)/1000; teleUlt = t; teleY += dt * +$('#teleVel').value; $('#teleRolo').scrollTop = teleY; teleRaf = requestAnimationFrame(passo); };
+  teleRaf = requestAnimationFrame(passo);
+};
+
+/* ========== ponte azul → vermelho ========== */
+function b64url(buf){ let s = ''; const u = new Uint8Array(buf); for (let i=0;i<u.length;i++) s += String.fromCharCode(u[i]); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+function deB64url(t){ t = t.replace(/-/g,'+').replace(/_/g,'/'); while (t.length%4) t += '='; const s = atob(t); const u = new Uint8Array(s.length); for (let i=0;i<s.length;i++) u[i] = s.charCodeAt(i); return u; }
+async function comprimir(str){ const cs = new CompressionStream('deflate-raw'); const st = new Blob([str]).stream().pipeThrough(cs); return b64url(await new Response(st).arrayBuffer()); }
+async function descomprimir(c){ const ds = new DecompressionStream('deflate-raw'); const st = new Blob([deB64url(c)]).stream().pipeThrough(ds); return await new Response(st).text(); }
+let linkPronto = LINK_VERMELHO, tLink;
+function pacote(){ const de = hoje(); return seqs.filter(s => s.data >= de || (atual && s.id === atual.id)).map(s => ({ ...s, stories: s.stories.map(x => ({ ...x })) })); }
+function agendarLink(){ if (MODO !== 'escrita') return; clearTimeout(tLink); tLink = setTimeout(async () => { try { const p = pacote(); if (!p.length){ linkPronto = LINK_VERMELHO; } else linkPronto = LINK_VERMELHO + '?c=' + await comprimir(JSON.stringify({ v:1, sequencias:p })); const a = $('#btVermelho'); if (a) a.href = linkPronto; } catch(e){} }, 400); }
+async function importarTexto(txt, silencioso){
+  txt = (txt||'').trim(); if (!txt) return false;
+  let dados = null;
+  const m = txt.match(/[?#&]c=([A-Za-z0-9_-]+)/) || (/^[A-Za-z0-9_-]{40,}$/.test(txt) ? [0, txt] : null);
+  try {
+    if (m){ if (ler(K.ult,'') === m[1] && silencioso) return false; dados = JSON.parse(await descomprimir(m[1])); gravar(K.ult, m[1]); }
+    else { const j = txt.slice(txt.indexOf('{'), txt.lastIndexOf('}')+1); dados = JSON.parse(j); }
+  } catch(e){ if (!silencioso) toast('Não reconheci esse conteúdo. Cole o link do Motor azul ou o JSON.'); return false; }
+  const lista = Array.isArray(dados) ? dados : dados.sequencias ? dados.sequencias : dados.stories ? [dados] : [];
+  if (!lista.length){ if (!silencioso) toast('Não achei sequências aí.'); return false; }
+  let novas = 0, ult = null;
+  lista.forEach(s => { const n = normalizar(s); const i = seqs.findIndex(x => x.id === n.id); if (i >= 0){ if (seqs[i].status === 'postado') n.status = 'postado'; seqs[i] = n; } else { seqs.push(n); novas++; } ult = n; });
+  salvarSeqs();
+  const hojeSeq = lista.length > 1 ? (seqs.find(s => s.data === hoje() && lista.some(l => l.id === s.id)) || ult) : ult;
+  toast(lista.length === 1 ? 'Sequência recebida.' : lista.length+' sequências recebidas e colocadas na agenda.');
+  abrirSeq(hojeSeq.id); return true;
+}
+async function lerAreaTransferencia(pedir){
+  try {
+    if (!pedir){ const p = await navigator.permissions.query({ name:'clipboard-read' }); if (p.state !== 'granted') return; }
+    const t = await navigator.clipboard.readText(); if (t && /c=|"sequencias"|"stories"/.test(t)) await importarTexto(t, !pedir); else if (pedir) toast('A área de transferência não tem sequência do Motor azul.');
+  } catch(e){ if (pedir){ $('#jsonTxt').hidden = false; $('#btImportar').hidden = false; $('#jsonTxt').focus(); toast('Cole o link no campo e toque em Importar.'); } }
+}
+
+/* ========== ações fixas ========== */
+function renderAcao(){
+  const a = $('#acao'); a.innerHTML = '';
+  if (MODO === 'escrita'){
+    if (!seqs.length) return;
+    a.innerHTML = `<a class="btn pri" id="btVermelho" href="${linkPronto}" target="_blank" rel="noopener">Abrir no Motor vermelho ↗</a>`;
+    $('#btVermelho').onclick = () => { copiar(linkPronto); toast('Link copiado. Se abrir aqui dentro, use o ícone vermelho do Motor Stories e toque em Colar do Motor azul.', 5000); };
+  } else {
+    if (abaAtual !== 'stories' || !atual) return;
+    const n = atual.stories.filter(exportavel).length;
+    a.innerHTML = `<button class="pri" id="btEnviar">${n ? 'Enviar ao Instagram ('+n+')' : 'Nada para enviar ainda'}</button>`;
+    $('#btEnviar').disabled = !n; $('#btEnviar').onclick = () => enviar(atual.stories.filter(exportavel));
+  }
+}
+async function arquivos(lista){ const out = []; for (const s of lista){ const b = await pngBlob(s); out.push(new File([b], nomeArq(atual, atual.stories.indexOf(s)), { type:'image/png' })); } return out; }
+async function enviar(lista){
+  if (!lista.length){ toast('Este story não vira imagem.'); return; }
+  const fs = await arquivos(lista);
+  if (navigator.canShare && navigator.canShare({ files: fs })){
+    try { await navigator.share({ files: fs }); perguntarPostado(); } catch(e){ if (e.name !== 'AbortError') baixarLocal(fs); }
+  } else baixarLocal(fs);
+}
+function baixarLocal(fs){ fs.forEach((f,i) => setTimeout(() => { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }, i*400)); toast('Imagens salvas na pasta de downloads.'); }
+function perguntarPostado(){
+  const a = $('#acao'); a.innerHTML = '<div class="linha" style="justify-content:center"><button class="pri" id="simPost">Postei</button><button id="naoPost">Ainda não</button></div>';
+  $('#simPost').onclick = () => { atual.status = 'postado'; salvarSeqs(); renderStories(); toast(ofensiva()+' '+(ofensiva()===1?'dia seguido':'dias seguidos')+'. Amanhã tem mais.'); };
+  $('#naoPost').onclick = renderAcao;
+}
+$('#btEnviarEste').onclick = () => enviar(exportavel(st()) ? [st()] : []);
+$('#btSalvar').onclick = async () => { const l = atual.stories.filter(exportavel); if (!l.length){ toast('Nada para salvar.'); return; } baixarLocal(await arquivos(l)); };
+$('#btBaixarAzul').onclick = async () => {
+  const dl = window.claude ? await window.claude.use('downloads') : null; const l = atual.stories.filter(exportavel);
+  if (!dl){ toast('Baixar não está disponível aqui. Use o Motor vermelho.'); return; }
+  for (const s of l){ try { await dl.save({ filename: nomeArq(atual, atual.stories.indexOf(s)), data: await pngBlob(s) }); } catch(e){ if (e && e.code === 'declined') break; } }
+};
+
+/* ========== lembrete (.ics) ========== */
+$('#btLembrete').onclick = () => {
+  const [hh, mm] = ($('#horaLembrete').value || '19:00').split(':'); cfg.hora = hh+':'+mm; gravar(K.cfg, cfg);
+  const d = hoje().replace(/-/g,''); const agora = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Motor Stories//PT-BR','BEGIN:VEVENT','UID:motor-stories-diario@dan','DTSTAMP:'+agora,'DTSTART:'+d+'T'+hh+mm+'00','DURATION:PT15M','RRULE:FREQ=DAILY','SUMMARY:Stories de hoje','DESCRIPTION:Abrir o Motor Stories: '+LINK_VERMELHO,'URL:'+LINK_VERMELHO,'BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:Stories de hoje','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  baixarLocal([new File([ics], 'lembrete-stories.ics', { type:'text/calendar' })]);
+  toast('Abra o arquivo baixado para adicionar ao calendário.');
+};
+
+/* ========== criar com o Claude ========== */
+const ENTRADAS = {
+  dia: { rot:'O que aconteceu', ph:'Fala solto: o que você fez, quanto tempo, o que alguém disse, o que cansou, o que você pensou fazendo aquilo.', dica:'Stories pedem mais matéria-prima que carrossel. Se vier curto, o Motor pergunta antes de escrever.' },
+  caixinha: { rot:'Respostas que chegaram', ph:'Cole as perguntas ou respostas da caixinha de ontem, uma por linha. Pode juntar o que você responderia.', dica:'O dia 2 do ciclo: as respostas de ontem viram a sequência de hoje, que termina em outra caixinha.' },
+  carrossel: { rot:'O carrossel de hoje', ph:'Cole a capa e os pontos principais do carrossel (ou o JSON do Motor Editorial).', dica:'Leva quem já segue para o post do feed sem pedir: um bastidor do porquê e o ponto que mais incomoda.' },
+  opiniao: { rot:'Assunto (opcional)', ph:'Deixe vazio para o Motor puxar um tema dos seus pilares, ou escreva uma ideia solta.', dica:'Opinião sincera em poucos stories. O que for afirmação sobre você vem marcado para você conferir.' },
+  semana: { rot:'O que vem pela frente', ph:'Opcional: compromissos, entregas, o que você vai fazer, carrosséis da semana. Quanto mais, melhor.', dica:'Gera 7 sequências, uma por dia. Os dias sem matéria-prima viram roteiro do que gravar, não história inventada.' }
+};
+let entrada = 'dia';
+function escolherEntrada(e){ entrada = e; $$('#entradaSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.e === e)); const c = ENTRADAS[e]; $('#entradaRotulo').textContent = c.rot; $('#entradaTxt').placeholder = c.ph; $('#entradaDica').textContent = c.dica; $('#gate').hidden = true; $('#btPular').hidden = true; $('#btGerar').textContent = e === 'semana' ? 'Escrever a semana' : 'Escrever sequência'; }
+$$('#entradaSeg button').forEach(b => b.onclick = () => escolherEntrada(b.dataset.e));
+escolherEntrada('dia');
+$('#optData').value = hoje();
+
+const REGRAS = `Você escreve sequências de Instagram Stories do Daniel Barboza. Responda só com JSON válido, sem texto antes ou depois.
+
+POSICIONAMENTO (v4)
+- Bio: "Quem é lembrado é chamado. Quem some, não." Pergunta-guia: "Por que isso foi lembrado — e o que você faz com isso?"
+- Público: quem vive do próprio trabalho e trava no conteúdo. Não é conteúdo para designers. Nunca chame o Daniel de designer (design é bagagem, nunca rótulo).
+- Pilares: bastidor + IA nos bastidores (~50%), marca decodificada (~25%), olho de quem cria + repertório (~25%). Não escreva o nome do pilar no story.
+- Limites: nunca política brasileira, nunca fé como gancho, nunca o Exército Brasileiro, nunca clientes políticos.
+
+REGRA DE OURO: só fatos que estão na entrada do Daniel. Não invente cena, hora, duração, número, nome, lugar, diálogo, cliente, sensação ou resultado. Se faltar matéria-prima, faça perguntas (formato "perguntas") ou transforme o story em "gravar", com roteiro do que mostrar e falar ao vivo. Opinião atribuída ao Daniel que não esteja na entrada entra também em "conferir".
+
+VOZ (método de conversa do Elton Luiz, adaptado; não copie frases dele)
+- Como quem conta para um amigo o que aconteceu hoje. Frases curtas. Uma ideia por story. Muita quebra de linha.
+- Detalhe concreto (o detalhe do detalhe) tirado da entrada; número específico só se ele disse.
+- Coloquial com medida ("cara", "sabe?", "né") e no máximo 1 vez por sequência cada. Sem palavrão, a menos que esteja na entrada.
+- Sem jargão de marketing (estratégia, framework, alavancar, escalar, método comprovado) e sem hype de IA.
+
+MÉTODO (Leandro Ladeira, Light Copy e Stories 10x)
+- Premissa, não promessa: premissa despretensiosa, incontestável e simples. A pessoa chega sozinha à conclusão.
+- Escalada de atenção: cada story faz querer ver o próximo; o último story antes da interação não pode ser o mais fraco.
+- Use 2 ou 3 destes recursos por sequência (não empilhe): escalada de atenção, super sincero (dizer o que todo mundo pensa e ninguém fala), crônica (detalhe do detalhe), sentir na pele, "sempre que" (âncora no cotidiano), metáfora, antítese, criação de personagem, ironia leve.
+- Gancho forte: curiosidade, frase que engasga, desabafo, argumento incontestável, cara de conversa. Proibido no gancho: técnico, imperativo, promessa, pretensão.
+- Palavras proibidas: exclusivo, único, promocional, não perca, infalível, imperdível, garantido, revolucionário, transformador, "agora" como urgência, descubra, o segredo, você sabia que, vamos falar sobre, game changer, confira, dica de ouro, vou te ensinar, simples assim.
+- Sem engagement bait: nada de "compartilha", "marca um amigo", "manda pra alguém", "me segue", "comenta X", "curte se concorda".
+
+ESTRUTURA DA SEQUÊNCIA
+- 2 a 8 stories. O tamanho vem do assunto; nunca estique para chegar num número.
+- Story 1: cena ou afirmação real. Nunca pergunta retórica genérica ("você já parou pra pensar...").
+- Meio: 1 ideia por story, até 30 palavras (máximo 40).
+- Penúltimo: a virada, opinião sincera do Daniel.
+- Último: interação ligada ao gancho ou à virada. Caixinha com pergunta específica que a pessoa responde com a própria experiência (proibido "manda sua opinião", "me pergunta algo"), ou enquete/quiz/slider com pergunta de verdade. O texto do story apresenta a pergunta; o adesivo carrega a pergunta curta (até 8 palavras).
+- Quando couber, uma linha honesta de limite ("isso não resolve se...").
+- Se houver carrossel do dia, um story leva ao post do feed sem pedir clique: diz o que tem lá e por que vale.
+- **negrito** em no máximo 3 palavras por story (vira marca-texto amarelo).
+
+TIPOS E VISUAIS
+- tipo "texto": imagem com texto. tipo "foto": foto do Daniel (ele escolhe) com texto curto por cima; use quando a entrada fala de algo que dá para fotografar (mesa, tela, lugar, objeto). tipo "gravar": ele grava no Instagram falando para a câmera ou mostrando a tela; preencha "roteiro" (falas em linhas curtas, 15 a 40 segundos, começa pelo gancho) e "mostrar" (o que filmar).
+- visual: "nativo" (parece feito no próprio Instagram: texto centralizado em fundo de cor), "manchete" (fundo preto, frase grande), "papel" (fundo claro), "nota" (app de notas, bom para lista curta ou desabafo), "conversa" (parece um tweet, bom para frase de opinião).
+- Estilo natural: maioria nativo, foto e gravar. Estilo bonito: manchete, papel, nota, conversa. Misto: alterne, começando por nativo.
+- Alterne visuais; nunca 3 stories seguidos iguais.
+
+FORMATO DA RESPOSTA
+Se faltar matéria-prima (menos de 3 fatos concretos na entrada) e a entrada não pedir para escrever mesmo assim:
+{"perguntas":["3 a 5 perguntas curtas e soltas, tipo: quantas vezes você já fez isso? o que cansa nisso? alguém falou alguma coisa? o que você pensa fazendo isso? vale a pena?"]}
+Senão:
+{"sequencias":[{"data":"AAAA-MM-DD","titulo":"até 40 caracteres","gatilho":"dia|caixinha|carrossel|opiniao|bastidor|fixa","dispositivos":["recursos do Ladeira usados"],"stories":[{"tipo":"texto|foto|gravar","visual":"nativo|manchete|papel|nota|conversa","texto":"texto que aparece (para gravar: a frase de abertura)","roteiro":"só para gravar","mostrar":"só para gravar ou foto: o que mostrar","fundo":"opcional para nativo: #0F0F10, #FFD400, #F5F3EE, #1B2A6B, #C2362B, #2E5E4E ou grad","sticker":{"tipo":"nenhum|caixinha|enquete|quiz|slider|link","texto":"pergunta curta do adesivo","opcoes":["só para enquete e quiz"]}}],"respostasModelo":["2 ou 3 respostas que o Daniel pode usar amanhã se a caixinha vier fraca, escritas como pergunta de seguidor + resposta curta dele, sem inventar fato"],"conferir":["cada afirmação sobre o Daniel ou opinião dele que não está na entrada"]}]}`;
+
+const RITMO_SEMANA = `Ritmo da semana (adapte ao que o Daniel contar):
+- segunda: bastidor da semana, story gravado mostrando a mesa/tela e o que vem.
+- terça: marca decodificada: uma marca que ele viu (foto) e por que foi lembrada; termina em enquete.
+- quarta: opinião super sincera sobre conteúdo e ser lembrado; termina em caixinha.
+- quinta: respostas da caixinha de quarta (como ainda não chegaram, deixe stories "gravar" com roteiro para responder ao vivo + use respostasModelo).
+- sexta: IA nos bastidores, gravar a tela mostrando um uso real que ele mencionou, ou roteiro do que mostrar.
+- sábado: repertório leve (algo que ele leu, viu, ouviu); curto, 2 a 3 stories.
+- domingo: crônica curta ou reflexão da semana; termina em slider ou caixinha.
+Nos dias sem fato dado pelo Daniel, os stories de conteúdo pessoal são "gravar" com roteiro em forma de perguntas para ele responder ao vivo. Pode haver stories de opinião em texto, sempre listados em "conferir".`;
+
+let sampleFn = null, ctl = null, perguntasGate = [];
+(async () => {
+  if (MODO !== 'escrita') return;
+  if (!window.claude){ $('#semSample').hidden = false; $('#btGerar').disabled = true; $('#btPorMim').disabled = true; return; }
+  try { sampleFn = await window.claude.use('sample'); } catch(e){}
+  if (!sampleFn){ $('#semSample').hidden = false; $('#btGerar').disabled = true; $('#btPorMim').disabled = true; }
+})();
+
+function montarPrompt(forcar){
+  const txt = $('#entradaTxt').value.trim(); const respGate = $('#gateTxt').value.trim();
+  const data = $('#optData').value || hoje(); const estilo = $('#optEstilo').value; const gravarOk = $('#optGravar').value === 'sim';
+  const recentes = seqs.slice(-8).map(s => '- '+s.titulo+': '+(s.stories[0]?s.stories[0].texto:'').slice(0,90)).join('\n');
+  let pedido = '';
+  if (entrada === 'semana'){
+    const datas = Array.from({length:7}, (_,i) => { const d = soma(data,i); return d+' ('+DIAS[deIso(d).getDay()]+')'; }).join(', ');
+    pedido = `PEDIDO: escreva 7 sequências, uma para cada data: ${datas}.\n${RITMO_SEMANA}\nNão use o formato "perguntas": escreva a semana com o que houver.`;
+  } else {
+    const nomes = { dia:'O Daniel contou o dia (gatilho "dia").', caixinha:'Respostas/perguntas que chegaram na caixinha de ontem (gatilho "caixinha"). Responda de verdade, com opinião dele marcada em conferir quando não estiver na entrada, e termine em nova caixinha.', carrossel:'Carrossel do feed de hoje (gatilho "carrossel"). Leve quem segue ao post sem pedir clique.', opiniao:'Opinião (gatilho "opiniao"). Se a entrada estiver vazia, escolha um tema dos pilares e escreva uma opinião sincera curta, toda listada em conferir.' };
+    pedido = `PEDIDO: escreva 1 sequência para ${data} (${DIAS[deIso(data).getDay()]}). ${nomes[entrada]}`;
+    if (forcar || entrada !== 'dia') pedido += '\nNão use o formato "perguntas": escreva com o que houver, sem inventar; o que faltar vira "gravar".';
+  }
+  return `${REGRAS}\n\nPREFERÊNCIAS: estilo ${estilo}. ${gravarOk ? 'Pode ter stories para gravar quando o assunto pedir rosto ou tela.' : 'Nenhum story do tipo gravar.'}\n\nSEQUÊNCIAS RECENTES (não repita gancho nem pergunta):\n${recentes || '(nenhuma)'}\n\n${pedido}\n\nENTRADA DO DANIEL:\n"""\n${txt || '(vazia)'}\n"""` + (respGate ? `\n\nRESPOSTAS DO DANIEL ÀS SUAS PERGUNTAS:\n${perguntasGate.map((p,i)=>(i+1)+'. '+p).join('\n')}\n"""\n${respGate}\n"""` : '');
+}
+function extrairJSON(t){ const a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a < 0 || b < a) throw new Error('sem json'); return JSON.parse(t.slice(a, b+1)); }
+async function gerar(forcar){
+  if (!sampleFn) return;
+  if (!forcar && entrada === 'dia' && !$('#entradaTxt').value.trim()){ toast('Conte o que aconteceu, nem que seja solto.'); $('#entradaTxt').focus(); return; }
+  const g = $('#gerando'); g.hidden = false; g.textContent = 'Pensando…';
+  $('#btGerar').disabled = true; $('#btPorMim').disabled = true; $('#btPular').hidden = true; $('#btParar').hidden = false;
+  ctl = new AbortController();
+  try {
+    const r = await sampleFn(montarPrompt(forcar || !$('#gate').hidden), { signal: ctl.signal, modelTier:'default', cache:false, onText: ({ text }) => { g.textContent = 'Escrevendo… ' + text.length + ' caracteres'; } });
+    const j = extrairJSON(r.text);
+    if (j.perguntas && !(j.sequencias && j.sequencias.length)){
+      perguntasGate = j.perguntas; $('#gateLista').innerHTML = j.perguntas.map(p => '<li>'+esc(p)+'</li>').join(''); $('#gate').hidden = false; $('#btPular').hidden = false; $('#gateTxt').focus();
+      g.hidden = true; $('#btGerar').textContent = 'Escrever com as respostas';
+    } else {
+      const lista = (j.sequencias || []).map(normalizar);
+      if (!lista.length) throw new Error('vazio');
+      const estilo = $('#optEstilo').value; if (estilo === 'natural') lista.forEach(s => aplicarEstilo(s, 'natural'));
+      seqs.push(...lista); salvarSeqs(); g.hidden = true; $('#gate').hidden = true; $('#gateTxt').value = ''; $('#entradaTxt').value = '';
+      escolherEntrada(entrada);
+      toast(lista.length > 1 ? lista.length+' sequências na agenda.' : 'Sequência pronta.');
+      abrirSeq(lista[0].id);
+    }
+  } catch(e){
+    g.hidden = false;
+    g.textContent = e && e.code === 'not_granted' ? 'Sem permissão para usar o Claude nesta página.' : e && e.code === 'rate_limited' ? 'Muitos pedidos seguidos. Espere um minuto e tente de novo.' : e && e.name === 'AbortError' || (e && e.code === 'aborted') ? 'Parado.' : 'Não consegui montar a sequência desta vez. Tente de novo.';
+  } finally { $('#btGerar').disabled = false; $('#btPorMim').disabled = false; $('#btParar').hidden = true; ctl = null; }
+}
+$('#btGerar').onclick = () => gerar(false);
+$('#btPorMim').onclick = () => { if (entrada !== 'semana') escolherEntrada('opiniao'); gerar(true); };
+$('#btPular').onclick = () => gerar(true);
+$('#btParar').onclick = () => { ctl && ctl.abort(); };
+
+/* ========== manual e importação ========== */
+function emBranco(data){
+  const s = normalizar({ data: data || hoje(), titulo: 'Stories de ' + DIAS[deIso(data||hoje()).getDay()], gatilho:'manual', stories:[ { tipo:'texto', visual:'nativo', texto:'' }, { tipo:'texto', visual:'nativo', texto:'', sticker:{ tipo:'caixinha', texto:'' } } ] });
+  seqs.push(s); salvarSeqs(); abrirSeq(s.id); setTimeout(() => $('#edTexto').focus(), 50);
+}
+$('#btEmBranco').onclick = () => emBranco($('#optData').value || hoje());
+$('#btColarJson').onclick = () => { $('#jsonTxt').hidden = false; $('#btImportar').hidden = false; $('#jsonTxt').focus(); };
+$('#btImportar').onclick = async () => { if (await importarTexto($('#jsonTxt').value)){ $('#jsonTxt').value = ''; $('#jsonTxt').hidden = true; $('#btImportar').hidden = true; } };
+$('#btColarAzul').onclick = () => lerAreaTransferencia(true);
+
+/* ========== ajustes ========== */
+function renderAjustes(){ $('#cfgNome').value = cfg.nome; $('#cfgArroba').value = cfg.arroba; }
+$('#cfgNome').oninput = e => { cfg.nome = e.target.value; gravar(K.cfg, cfg); };
+$('#cfgArroba').oninput = e => { let v = e.target.value.trim(); cfg.arroba = v && v[0] !== '@' ? '@'+v : v; gravar(K.cfg, cfg); };
+$('#cfgAvatar').onchange = async e => { const f = e.target.files[0]; if (!f) return; cfg.avatar = await lerFoto(f, 240); gravar(K.cfg, cfg); toast('Foto do perfil salva.'); };
+$('#btExportar').onclick = async () => { toast(await copiar(JSON.stringify({ sequencias: seqs })) ? 'Backup copiado. Cole num lugar seguro.' : 'Não deu para copiar.'); };
+$('#btLimparPostadas').onclick = () => { const lim = soma(hoje(), -30); const antes = seqs.length; seqs = seqs.filter(s => !(s.status === 'postado' && s.data < lim)); salvarSeqs(); toast((antes - seqs.length)+' sequências apagadas.'); };
+
+/* ========== exemplo para quem abre pela primeira vez ========== */
+if (!seqs.length && !ler('dan_stories_exemplo_v1', false)){
+  gravar('dan_stories_exemplo_v1', true);
+  seqs.push(normalizar({ id:'exemplo', data: hoje(), titulo:'Exemplo: como fica uma sequência', gatilho:'exemplo', dispositivos:['escalada de atenção','super sincero'],
+    conferir:['Esta é uma sequência de exemplo. Apague e crie a sua em Criar.'],
+    stories:[
+      { tipo:'texto', visual:'nativo', fundo:'#0F0F10', texto:'Exemplo de story 1.\n\nAqui entra a **cena** que você contou.' },
+      { tipo:'texto', visual:'manchete', texto:'Story 2 em visual Manchete.\nUma ideia por story, frase **curta**.' },
+      { tipo:'gravar', texto:'Abertura do vídeo', roteiro:'Story para gravar.\nO roteiro aparece no teleprompter.\nVocê lê e grava direto no Instagram.', mostrar:'sua mesa de trabalho' },
+      { tipo:'texto', visual:'nota', texto:'Visual Nota.\nBom para **lista curta** ou desabafo.' },
+      { tipo:'texto', visual:'nativo', fundo:'#FFD400', texto:'O último story puxa a conversa.', sticker:{ tipo:'caixinha', texto:'Pergunta de exemplo' } }
+    ] }));
+  salvarSeqs();
+}
+
+/* teclado aberto: esconde a barra de baixo para não cobrir o campo */
+document.addEventListener('focusin', e => { if (e.target.matches('input:not([type=range]):not([type=file]),textarea')) document.body.classList.add('digitando'); });
+document.addEventListener('focusout', () => setTimeout(() => { if (!document.activeElement || !document.activeElement.matches('input,textarea')) document.body.classList.remove('digitando'); }, 50));
+
+/* ========== início ========== */
+async function iniciar(){
+  try { await Promise.all(['700 80px', '600 40px', '500 40px'].map(f => document.fonts.load(f+' "Instrument Sans"'))); } catch(e){}
+  try { history.replaceState({ aba: 'hoje' }, ''); } catch(e){}
+  ir(ler(K.aba, 'hoje') === 'stories' && !atual ? 'hoje' : ler(K.aba, 'hoje'), true);
+  agendarLink();
+  if (MODO === 'fotos'){
+    const c = qs.get('c') || (location.hash.match(/c=([A-Za-z0-9_-]+)/)||[])[1];
+    if (c){ await importarTexto('?c='+c, false); try { history.replaceState({ aba:'stories' }, '', location.pathname); } catch(e){} }
+    else lerAreaTransferencia(false);
+    window.addEventListener('focus', () => lerAreaTransferencia(false));
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) lerAreaTransferencia(false); });
+  }
+}
+document.fonts && document.fonts.ready ? document.fonts.ready.then(() => { if (abaAtual==='stories') renderStories(); else if (abaAtual==='hoje') renderHoje(); }) : 0;
+iniciar();
+})();
+</script>
+
+</body>
+</html>
