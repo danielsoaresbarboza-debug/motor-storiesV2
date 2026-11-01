@@ -33,7 +33,7 @@ Escrita: fragmentar, ponto-final, 1 a 3 palavras em `**negrito**` por story, at�
   "gatilho":"alta",
   "dispositivos":["escalada de atenção","super sincero"],
   "stories":[
-    {"tipo":"texto","visual":"nativo|manchete|papel|nota|conversa|anuncio","texto":"...","fundo":"#0F0F10 (opcional)",
+    {"tipo":"texto","visual":"vidro|nativo|manchete|papel|nota|conversa|anuncio","texto":"...","fundo":"#0F0F10 (opcional)",
      "sticker":{"tipo":"nenhum|caixinha|enquete|quiz|slider","texto":"pergunta curta","opcoes":["Sim","Não"]}}
   ],
   "respostasModelo":[],
@@ -41,7 +41,7 @@ Escrita: fragmentar, ponto-final, 1 a 3 palavras em `**negrito**` por story, at�
 }]}
 ```
 - `id`: `alta-` + data sem traços + número do tema (1, 2, 3). `data`: o dia da execução.
-- Visual `anuncio`: 1º parágrafo vira título grande; depois de uma linha em branco, o texto.
+- Visual `vidro` (o mais elegante, painel de vidro líquido com texto em serifa) na maioria dos stories de texto; `anuncio` para o título grande (1º parágrafo; depois de uma linha em branco, o texto).
 - Toda fonte usada entra em `conferir` com veículo, data e link.
 
 ## 4. Gerar o link e entregar
