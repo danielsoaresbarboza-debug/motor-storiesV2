@@ -258,6 +258,11 @@ details.mais[open]>summary{margin-bottom:10px}
         <div class="pilha">
           <div class="cartao so-escrita" id="avisoFotos" hidden><h3>Fotos automáticas</h3><p class="dica">Esta sequência tem stories com foto de fundo. Elas entram sozinhas no Motor vermelho, que também envia direto para o Instagram.</p><a class="btn pri" id="btVermelho2" href="#" target="_blank" rel="noopener">Abrir no Motor vermelho ↗</a></div>
           <div class="passo" id="passo"></div>
+          <div class="cartao so-escrita" id="cartaoReescrever">
+            <h3>Não ficou bom?</h3>
+            <div class="linha"><button id="btReescrever">Reescrever a sequência com o método</button></div>
+            <p class="dica" id="reescStatus">Refaz o texto do zero com a estrutura do Ladeira, a voz do Elton e as regras anti-IA. Mantém as fotos e a ordem.</p>
+          </div>
 
           <div class="cartao" id="editor" hidden>
             <div class="linha"><span class="etiqueta" id="etTipo"></span></div>
@@ -274,7 +279,7 @@ details.mais[open]>summary{margin-bottom:10px}
                 <select id="edTipo"><option value="texto">Imagem com texto</option><option value="resposta">Resposta de caixinha</option><option value="foto">Foto sua + texto</option><option value="case">Resultado com print</option><option value="gravar">Gravar no Instagram</option></select>
               </label>
               <label style="flex:1 1 130px" for="edVisual">Visual
-                <select id="edVisual"><option value="vidro">Vidro (elegante)</option><option value="nativo">Natural (Instagram)</option><option value="manchete">Manchete</option><option value="papel">Papel</option><option value="nota">Nota</option><option value="conversa">Conversa</option><option value="anuncio">Título grande</option><option value="ritual">Capa da caixinha</option><option value="capa">Capa de destaque</option></select>
+                <select id="edVisual"><option value="imagem">Foto com texto por cima</option><option value="vidro">Vidro (elegante)</option><option value="nativo">Natural (Instagram)</option><option value="manchete">Manchete</option><option value="papel">Papel</option><option value="nota">Nota</option><option value="conversa">Conversa</option><option value="anuncio">Título grande</option><option value="ritual">Capa da caixinha</option><option value="capa">Capa de destaque</option></select>
               </label>
             </div>
             <div class="pilha" id="blocoCor">
@@ -462,10 +467,10 @@ const rotinaDe = d => ROTINA[deIso(d).getDay()];
 /* ========== modelo de dados ========== */
 function novoStory(p){ return Object.assign({ id:uid(), tipo:'texto', visual:'nativo', texto:'', pergunta:'', imgBusca:'', credito:'', roteiro:'', mostrar:'', fundo:'', sticker:{tipo:'nenhum', texto:'', opcoes:[]} }, p||{}); }
 function normalizar(s){
-  const seq = { id: s.id || uid(), data: s.data || hoje(), titulo: (s.titulo||'Sequência').slice(0,60), gatilho: s.gatilho||'', dispositivos: s.dispositivos||[], respostasModelo: s.respostasModelo||[], conferir: s.conferir||[], status: s.status==='postado'?'postado':'planejado', criado: s.criado || Date.now(), stories: [] };
+  const seq = { id: s.id || uid(), entrada: s.entrada || '', data: s.data || hoje(), titulo: (s.titulo||'Sequência').slice(0,60), gatilho: s.gatilho||'', dispositivos: s.dispositivos||[], respostasModelo: s.respostasModelo||[], conferir: s.conferir||[], status: s.status==='postado'?'postado':'planejado', criado: s.criado || Date.now(), stories: [] };
   (s.stories||[]).forEach(st => {
     const t = ['texto','foto','gravar','resposta','case'].includes(st.tipo) ? st.tipo : 'texto';
-    const v = ['vidro','nativo','manchete','papel','nota','conversa','anuncio','ritual','capa'].includes(st.visual) ? st.visual : 'nativo';
+    const v = ['imagem','vidro','nativo','manchete','papel','nota','conversa','anuncio','ritual','capa'].includes(st.visual) ? st.visual : 'nativo';
     const sk = st.sticker && typeof st.sticker === 'object' ? st.sticker : {};
     seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', pergunta: st.pergunta||'', imgBusca: st.imgBusca||'', credito: st.credito||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'',
       sticker: { tipo: ['caixinha','enquete','quiz','slider','link'].includes(sk.tipo) ? sk.tipo : 'nenhum', texto: sk.texto||'', opcoes: Array.isArray(sk.opcoes) ? sk.opcoes.slice(0,4) : [] } }));
@@ -654,7 +659,7 @@ function desenhar(ctx, st, o){
     const claro = cor !== 'grad' && lum(cor) > 0.6; const fg = claro ? PR : '#F5F3EE';
     // balão da pergunta
     ctx.font = '500 44px '+F_SANS;
-    const Lq = ajustar(ctx, (st.pergunta || 'Pergunta que chegou').replace(/\*\*/g,''), { max:46, min:34, maxW:W-300, maxH:360, peso:500, lh:1.3 });
+    const Lq = ajustar(ctx, (st.pergunta || 'Pergunta que chegou').replace(/\*\*/g,''), { max:38, min:30, maxW:W-300, maxH:360, peso:500, lh:1.3 });
     const bh = Lq.h + 150, bx = 110, by = TOPO + 30;
     vidro(ctx, bx, by, W-220, bh, 44, false);
     ctx.fillStyle = 'rgba(20,20,20,.55)'; ctx.font = '700 24px '+F_SANS; ctx.textAlign = 'center'; if ('letterSpacing' in ctx) ctx.letterSpacing = '3px'; ctx.fillText('PERGUNTA DA CAIXINHA', W/2, by+56); if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'; ctx.textAlign = 'left';
@@ -662,7 +667,7 @@ function desenhar(ctx, st, o){
     escrever(ctx, Lq, W/2, by+100, { alinhar:'centro', cor:'#141414' });
     // resposta
     const yA = by + bh + 90; const yLim = st.sticker.tipo !== 'nenhum' ? ADES[0]-40 : BASE;
-    const La = ajustar(ctx, st.texto || '', { max:84, min:44, maxW:W-200, maxH:yLim-yA, peso:500, fam:F_SERIF, lh:1.1 });
+    const La = ajustar(ctx, st.texto || '', { max:68, min:42, maxW:W-220, maxH:yLim-yA, peso:500, fam:F_SERIF, lh:1.16 });
     escrever(ctx, La, 100, yA, { cor:fg, marcaFundo: cor === AM ? PR : AM, marcaCor: cor === AM ? AM : PR });
     assinatura(ctx, claro); ctx.restore(); return;
   }
@@ -670,9 +675,9 @@ function desenhar(ctx, st, o){
     fundoElegante(ctx, PR);
     const partes = String(st.texto||'').split(/\n\s*\n/); const titulo = partes[0] || ''; const resto = partes.slice(1).join('\n\n');
     ctx.fillStyle = AM; ctx.font = '700 28px '+F_SANS; ctx.fillText('RESULTADO', 100, TOPO+30);
-    const Lt = ajustar(ctx, titulo, { max:104, min:60, maxW:W-200, maxH:330, peso:500, fam:F_SERIF, lh:1.04 });
+    const Lt = ajustar(ctx, titulo, { max:78, min:52, maxW:W-200, maxH:300, peso:500, fam:F_SERIF, lh:1.08 });
     const yt = escrever(ctx, Lt, 100, TOPO+70, { cor:'#F5F3EE', marcaFundo:AM, marcaCor:PR });
-    const Lr = resto.trim() ? ajustar(ctx, resto, { max:44, min:32, maxW:W-200, maxH:260, peso:500, lh:1.3 }) : null;
+    const Lr = resto.trim() ? ajustar(ctx, resto, { max:38, min:30, maxW:W-200, maxH:260, peso:500, lh:1.3 }) : null;
     const yFimImg = (st.sticker.tipo !== 'nenhum' ? ADES[0]-40 : BASE) - (Lr ? Lr.h + 50 : 0);
     const fx = 100, fy = yt + 40, fw = W-200, fh = Math.max(300, yFimImg - fy);
     const im = imagem(fotos[st.id]);
@@ -685,6 +690,25 @@ function desenhar(ctx, st, o){
     ctx.restore(); return;
   }
   const v = st.visual;
+  if (v === 'imagem'){
+    const im = imagem(fotos[st.id]);
+    if (im) cobrir(ctx, im, 0, 0, W, H); else fundoElegante(ctx, st.fundo || PR);
+    const palavras = st.texto.replace(/\*\*/g,'').split(/\s+/).filter(Boolean).length;
+    const L = ajustar(ctx, st.texto, palavras <= 16 ? { max:78, min:46, maxW:W-200, maxH:(y1-y0)*0.55, peso:500, fam:F_SERIF, lh:1.1 } : { max:48, min:34, maxW:W-200, maxH:(y1-y0)*0.55, peso:600, lh:1.3 });
+    const emCima = st.sticker.tipo !== 'nenhum';
+    const yTop = emCima ? y0 + 60 : y1 - L.h - 40;
+    // véu para contraste: escurece só onde o texto fica
+    const g = emCima ? ctx.createLinearGradient(0, 0, 0, yTop + L.h + 260) : ctx.createLinearGradient(0, yTop - 360, 0, H);
+    if (emCima){ g.addColorStop(0, 'rgba(0,0,0,.78)'); g.addColorStop(.6, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)'); }
+    else { g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.35, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,.82)'); }
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); grao(ctx, .05);
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 18;
+    cabecalhoVidro(ctx, 100, yTop - 26, '#F7F6F2');
+    escrever(ctx, L, 100, yTop, { cor:'#F7F6F2', marcaFundo:AM, marcaCor:PR });
+    ctx.restore();
+    if (im && st.credito){ ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.font = '500 20px '+F_SANS; ctx.textAlign = 'center'; ctx.fillText(st.credito.slice(0, 90), W/2, H - 120); ctx.textAlign = 'left'; }
+    ctx.restore(); return;
+  }
   if (v === 'vidro' || (st.tipo === 'foto' && v === 'vidro')){
     const src = fotos[st.id]; const im = imagem(src);
     const cor = st.fundo || PR; const claroF = !im && cor !== 'grad' && lum(cor) > 0.6;
@@ -692,8 +716,8 @@ function desenhar(ctx, st, o){
     const dark = !claroF;
     const palavras = st.texto.replace(/\*\*/g,'').split(/\s+/).filter(Boolean).length;
     const serif = palavras <= 18;
-    const pw = W - 160, px = 80, pad = 70;
-    const L = ajustar(ctx, st.texto, serif ? { max:96, min:54, maxW:pw - pad*2, maxH:(y1-y0) - 260, peso:500, fam:F_SERIF, lh:1.08 } : { max:58, min:38, maxW:pw - pad*2, maxH:(y1-y0) - 260, peso:600, lh:1.28 });
+    const pw = W - 200, px = 100, pad = 64;
+    const L = ajustar(ctx, st.texto, serif ? { max:72, min:44, maxW:pw - pad*2, maxH:(y1-y0) - 260, peso:500, fam:F_SERIF, lh:1.12 } : { max:44, min:32, maxW:pw - pad*2, maxH:(y1-y0) - 260, peso:500, lh:1.36 });
     const ph = L.h + pad*2 + 60;
     let py = st.sticker.tipo !== 'nenhum' ? y0 + 20 : (im ? Math.max(y0, y1 - ph - 40) : y0 + (y1 - y0 - ph)/2);
     const fg = vidro(ctx, px, py, pw, ph, 56, dark);
@@ -707,7 +731,7 @@ function desenhar(ctx, st, o){
     if (im){ const r = Math.max(W/im.width, H/im.height); const w = im.width*r, h = im.height*r; ctx.drawImage(im, (W-w)/2, (H-h)/2, w, h); const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(0,0,0,.35)'); g.addColorStop(.3,'rgba(0,0,0,0)'); g.addColorStop(.75,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.35)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H); }
     else { ctx.fillStyle = '#2A2A2E'; ctx.fillRect(0,0,W,H); ctx.fillStyle = '#6E6E75'; ctx.font = '600 44px '+F_SANS; ctx.textAlign = 'center'; ctx.fillText(o.exportar ? '' : 'Escolha uma foto sua', W/2, H/2); ctx.textAlign = 'left'; }
     if (st.texto.trim()){
-      const L = ajustar(ctx, st.texto, { max:68, min:40, maxW:W-260, maxH:(y1-y0)*0.7, peso:700, lh:1.32 });
+      const L = ajustar(ctx, st.texto, { max:50, min:36, maxW:W-260, maxH:(y1-y0)*0.7, peso:600, lh:1.36 });
       const yTop = st.sticker.tipo !== 'nenhum' ? y0+40 : Math.max(y0, (y0+y1)/2 - L.h/2 + 260);
       escrever(ctx, L, W/2, yTop, { alinhar:'centro', cor:PR, caixa:'#FFFFFF', marcaFundo:AM, marcaCor:PR });
     }
@@ -717,7 +741,7 @@ function desenhar(ctx, st, o){
     const cor = st.fundo || '#0F0F10'; fundoNativo(ctx, cor);
     const claro = cor !== 'grad' && lum(cor) > 0.6; const corTxt = claro ? PR : '#FFFFFF';
     const mf = cor === '#FFD400' ? PR : AM, mc = cor === '#FFD400' ? AM : PR;
-    const L = ajustar(ctx, st.texto, { max:84, min:44, maxW:W-200, maxH:y1-y0, peso:700, lh:1.24 });
+    const L = ajustar(ctx, st.texto, { max:64, min:40, maxW:W-220, maxH:y1-y0, peso:700, lh:1.26 });
     const yTop = st.sticker.tipo !== 'nenhum' ? y0 + Math.max(0,(y1-y0-L.h)*0.35) : y0 + (y1-y0-L.h)/2;
     escrever(ctx, L, W/2, yTop, { alinhar:'centro', cor:corTxt, marcaFundo:mf, marcaCor:mc });
   } else if (v === 'manchete' || v === 'papel'){
@@ -725,7 +749,7 @@ function desenhar(ctx, st, o){
     const fg = escuro ? '#F5F3EE' : PR; const mut = escuro ? 'rgba(245,243,238,.6)' : 'rgba(15,15,16,.55)';
     ctx.fillStyle = AM; ctx.beginPath(); ctx.arc(108, TOPO+24, 12, 0, 7); ctx.fill();
     ctx.fillStyle = mut; ctx.font = '600 30px '+F_SANS; ctx.fillText((cfg.nome||'').toUpperCase(), 136, TOPO+35);
-    const L = ajustar(ctx, st.texto, { max:104, min:48, maxW:W-192, maxH:(y1-y0)-120, peso:700, lh:1.12 });
+    const L = ajustar(ctx, st.texto, { max:78, min:44, maxW:W-200, maxH:(y1-y0)-120, peso:700, lh:1.14 });
     const yTop = st.sticker.tipo !== 'nenhum' ? y0+110 : Math.max(y0+110, y0 + (y1-y0-L.h)/2);
     const yf = escrever(ctx, L, 96, yTop, { cor:fg, marcaFundo:AM, marcaCor:PR });
     ctx.fillStyle = escuro ? AM : PR; ctx.fillRect(96, yf+36, 120, 10);
@@ -734,8 +758,8 @@ function desenhar(ctx, st, o){
     const claro = cor !== 'grad' && lum(cor) > 0.6; const fg = claro ? PR : '#F5F3EE';
     const partes = String(st.texto||'').split(/\n\s*\n/); const titulo = partes[0] || ''; let corpo = partes.slice(1).join('\n\n');
     corpo = corpo.replace(/^(\s*)(\d+[.)]|[–-])\s+/gm, (m, a, n) => a + '**' + n + '** ');
-    const Lt = ajustar(ctx, titulo, { max:140, min:70, maxW:W-200, maxH:(y1-y0)*(corpo ? .5 : .85), peso:500, fam:F_SERIF, lh:1.0 });
-    const Lc = corpo.trim() ? ajustar(ctx, corpo, { max:56, min:40, maxW:W-200, maxH:(y1-y0) - Lt.h - 140, peso:500, lh:1.32 }) : null;
+    const Lt = ajustar(ctx, titulo, { max:100, min:60, maxW:W-200, maxH:(y1-y0)*(corpo ? .5 : .85), peso:500, fam:F_SERIF, lh:1.04 });
+    const Lc = corpo.trim() ? ajustar(ctx, corpo, { max:42, min:32, maxW:W-200, maxH:(y1-y0) - Lt.h - 140, peso:500, lh:1.32 }) : null;
     const total = Lt.h + (Lc ? Lc.h + 90 : 0); const yTop = st.sticker.tipo !== 'nenhum' ? y0 + 20 : y0 + Math.max(0, (y1-y0-total)/2);
     const mf = cor === AM ? PR : AM, mc = cor === AM ? AM : PR;
     const yt = escrever(ctx, Lt, 100, yTop, { cor:fg, marcaFundo:mf, marcaCor:mc });
@@ -750,29 +774,29 @@ function desenhar(ctx, st, o){
     const fgR = rf ? '#F5F3EE' : fg; ambiente(ctx, !claro || !!rf, !!rf);
     ctx.strokeStyle = cor === AM ? PR : AM; ctx.lineWidth = 14; ctx.beginPath(); ctx.arc(W-150, TOPO+150, 230, Math.PI*.55, Math.PI*1.65); ctx.stroke();
     const d = deIso(o.data || (atual && atual.data) || hoje()); ctx.fillStyle = fgR; ctx.globalAlpha = .7; ctx.font = '600 30px '+F_SANS; ctx.fillText((DIAS[d.getDay()]+' · '+d.getDate()+' '+MESES[d.getMonth()]).toUpperCase(), 100, TOPO+40); ctx.globalAlpha = 1;
-    ctx.fillStyle = fgR; ctx.font = '500 210px '+F_SERIF; ctx.fillText('Caixinha', 84, TOPO+300);
+    ctx.fillStyle = fgR; ctx.font = '500 168px '+F_SERIF; ctx.fillText('Caixinha', 90, TOPO+270);
     const primeiro = (cfg.nome || '').split(' ')[0];
-    ctx.fillStyle = cor === AM && !rf ? PR : AM; ctx.font = 'italic 400 120px '+F_SERIF; ctx.fillText('do '+primeiro, 100, TOPO+430);
+    ctx.fillStyle = cor === AM && !rf ? PR : AM; ctx.font = 'italic 400 92px '+F_SERIF; ctx.fillText('do '+primeiro, 100, TOPO+380);
     const frase = st.texto.trim() || cfg.ritualTexto || '';
-    const Lf = ajustar(ctx, frase, { max:50, min:34, maxW:W-340, maxH:240, peso:500, lh:1.3 });
+    const Lf = ajustar(ctx, frase, { max:40, min:30, maxW:W-340, maxH:220, peso:500, lh:1.34 });
     const fv = vidro(ctx, 80, TOPO+500, W-160, Lf.h + 120, 48, !(claro && !rf));
     escrever(ctx, Lf, 140, TOPO+560, { cor:fv, marcaFundo:AM, marcaCor:PR });
   } else if (v === 'capa'){
     const cor = st.fundo || AM; fundoNativo(ctx, cor);
     const claro = cor !== 'grad' && lum(cor) > 0.6; const fg = claro ? PR : '#F5F3EE';
     ctx.strokeStyle = fg; ctx.globalAlpha = .9; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(W/2, H/2, 330, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
-    const L = ajustar(ctx, (st.texto || 'Comece aqui').replace(/\*\*/g,''), { max:140, min:70, maxW:520, maxH:420, peso:500, fam:F_SERIF, lh:.98 });
+    const L = ajustar(ctx, (st.texto || 'Comece aqui').replace(/\*\*/g,''), { max:110, min:64, maxW:520, maxH:420, peso:500, fam:F_SERIF, lh:.98 });
     escrever(ctx, L, W/2, H/2 - L.h/2 - 10, { alinhar:'centro', cor:fg });
   } else if (v === 'nota'){
     ctx.fillStyle = '#FBFAF6'; ctx.fillRect(0,0,W,H);
     ctx.fillStyle = '#C79A00'; ctx.font = '500 40px '+F_SANS; ctx.fillText('‹ Notas', 70, TOPO+10);
     ctx.fillStyle = '#9A978F'; ctx.font = '500 28px '+F_SANS; ctx.textAlign = 'center'; const d = deIso(o.data || (atual && atual.data) || hoje()); ctx.fillText(d.getDate()+' de '+MESES[d.getMonth()]+' de '+d.getFullYear(), W/2, TOPO+110); ctx.textAlign = 'left';
-    const L = ajustar(ctx, st.texto, { max:66, min:40, maxW:W-180, maxH:(y1-y0)-160, peso:600, lh:1.32 });
+    const L = ajustar(ctx, st.texto, { max:50, min:36, maxW:W-180, maxH:(y1-y0)-160, peso:500, lh:1.36 });
     escrever(ctx, L, 90, y0+150, { cor:'#1C1B19', marcaFundo:'#FFE45C', marcaCor:'#1C1B19' });
   } else if (v === 'conversa'){
     const cor = st.fundo || AM; fundoNativo(ctx, cor);
     ctx.font = '500 50px '+F_SANS;
-    const L = ajustar(ctx, st.texto, { max:54, min:36, maxW:W-280, maxH:(y1-y0)-260, peso:500, lh:1.36 });
+    const L = ajustar(ctx, st.texto, { max:44, min:34, maxW:W-280, maxH:(y1-y0)-260, peso:500, lh:1.38 });
     const ch = L.h + 230; const cy = st.sticker.tipo !== 'nenhum' ? y0 : y0 + (y1-y0-ch)/2;
     ctx.fillStyle = '#FFFFFF'; ctx.shadowColor = 'rgba(0,0,0,.18)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 16; rr(ctx, 70, cy, W-140, ch, 44); ctx.fill(); ctx.shadowColor = 'transparent';
     const av = imagem(cfg.avatar);
@@ -838,8 +862,18 @@ function renderHoje(){
   const l = porDia(hoje()); const c = $('#hojeCartao'); const R = rotinaDe(hoje());
   const faixa = `<div class="rotina"><small>Hoje é dia de</small><b>${R.nome}</b><p>${R.dica}</p></div>`;
   if (l.length){
-    c.innerHTML = faixa + l.map(s => `<div class="pilha" style="gap:8px"><div class="mini-fita">${s.stories.map(x => '<img alt="" src="'+miniatura(x, s.data)+'">').join('')}</div><div class="linha"><button class="${s.status==='postado'?'':'pri'}" data-ver="${s.id}">${s.status==='postado' ? 'Postada ✓ · ver' : 'Ver e baixar'}</button><span class="dica">${esc(s.titulo)} · ${s.stories.length} stories</span></div></div>`).join('') + blocoDireto(hoje());
+    const ordem = [...l].sort((x, y) => (x.gatilho === 'alta') - (y.gatilho === 'alta'));
+    const rec = ordem.find(x => x.status !== 'postado') || ordem[0]; const outras = ordem.filter(x => x !== rec);
+    const pronta = conferencia(rec).length === 0 && rec.stories.some(exportavel);
+    const tema = (rec.stories[0] && (rec.stories[0].texto || rec.stories[0].pergunta) || '').replace(/\*\*/g, '').split('\n')[0].slice(0, 90);
+    c.innerHTML = faixa + `<div class="pilha" style="gap:10px">
+      <h3>${rec.status === 'postado' ? 'Postado hoje' : (pronta ? 'Poste esta. Está pronta.' : 'A de hoje (confira antes)')}</h3>
+      <div><b style="font:500 22px/1.2 var(--f-display)">${esc(rec.titulo)}</b><p class="dica">“${esc(tema)}” · ${rec.stories.length} stories</p></div>
+      <div class="mini-fita">${rec.stories.map(x => '<img alt="" src="'+miniatura(x, rec.data)+'">').join('')}</div>
+      <div class="linha">${rec.status === 'postado' ? '<button data-ver="'+rec.id+'">Ver</button>' : '<button class="pri" data-ja="'+rec.id+'">'+(MODO === 'fotos' ? 'Enviar ao Instagram' : 'Baixar e postar')+'</button><button data-ver="'+rec.id+'">Ver antes</button>'}</div>
+    </div>` + (outras.length ? `<details class="mais"><summary>Outras opções de hoje (${outras.length})</summary><div class="lista-seq">${outras.map(linhaSeq).join('')}</div></details>` : '') + blocoDireto(hoje());
     c.querySelectorAll('[data-ver]').forEach(b => b.onclick = () => { setModo(false); abrirSeq(b.dataset.ver); });
+    c.querySelectorAll('[data-ja]').forEach(b => b.onclick = () => { setModo(false); abrirSeq(b.dataset.ja); const lst = atual.stories.filter(exportavel); if (MODO === 'fotos') enviar(lst); else baixarAzul(lst); });
     ligarLista(c); ligarDireto(c, hoje(), renderHoje);
   } else {
     const prox = seqs.filter(s => s.data > hoje() && s.status !== 'postado').sort((a,b) => a.data < b.data ? -1 : 1)[0];
@@ -929,7 +963,7 @@ function renderStories(){
   $('#contador').textContent = (idx+1)+' de '+atual.stories.length;
   renderFita();
   editando = true;
-  $('#edTexto').value = st.texto; $('#edPergunta').value = st.pergunta || ''; $('#edBusca').value = st.imgBusca || ''; $('#rotBusca').hidden = !(st.visual === 'vidro' || st.tipo === 'foto'); $('#edRoteiro').value = st.roteiro; $('#edMostrar').value = st.mostrar;
+  $('#edTexto').value = st.texto; $('#edPergunta').value = st.pergunta || ''; $('#edBusca').value = st.imgBusca || ''; $('#rotBusca').hidden = !(st.visual === 'vidro' || st.visual === 'imagem' || st.tipo === 'foto'); $('#edRoteiro').value = st.roteiro; $('#edMostrar').value = st.mostrar;
   $('#edTipo').value = st.tipo; $('#edVisual').value = st.visual;
   $('#edAdesivo').value = st.sticker.tipo; $('#edAdesivoTxt').value = st.sticker.texto; $('#edOpcoes').value = st.sticker.opcoes.join(' / ');
   $('#sqTitulo').value = atual.titulo; $('#sqData').value = atual.data; $('#sqEstilo').value = '';
@@ -937,9 +971,9 @@ function renderStories(){
   const et = $('#etTipo'); et.className = 'etiqueta' + (st.tipo==='gravar'?' gravar':''); const lv = $('#btVermelho'); if (lv) lv.href = linkPronto; et.textContent = ({ gravar:'Gravar no Instagram', foto:'Foto sua', resposta:'Resposta de caixinha', case:'Resultado com print' })[st.tipo] || 'Imagem';
   $('#rotPergunta').hidden = st.tipo !== 'resposta';
   $('#rotTexto').textContent = st.tipo === 'resposta' ? 'Sua resposta' : st.tipo === 'case' ? 'Resultado (1ª linha) e contexto (depois de uma linha em branco)' : (st.visual === 'anuncio' && st.tipo === 'texto') ? 'Título (1º parágrafo) e texto (depois de uma linha em branco)' : (st.visual === 'ritual' && st.tipo === 'texto') ? 'Frase da capa (vazio = a dos Ajustes)' : 'Texto do story';
-  $('#rotFoto').textContent = st.tipo === 'case' ? 'Escolher print' : (st.visual === 'vidro' && st.tipo === 'texto') ? 'Foto atrás do vidro (opcional)' : 'Escolher foto';
+  $('#rotFoto').textContent = st.tipo === 'case' ? 'Escolher print' : (st.tipo === 'texto' && (st.visual === 'vidro' || st.visual === 'imagem')) ? 'Foto de fundo (sua)' : 'Escolher foto';
   $('#blocoGravar').hidden = st.tipo !== 'gravar';
-  $('#blocoFoto').hidden = !(st.tipo === 'foto' || st.tipo === 'case' || (st.tipo === 'texto' && st.visual === 'vidro'));
+  $('#blocoFoto').hidden = !(st.tipo === 'foto' || st.tipo === 'case' || (st.tipo === 'texto' && (st.visual === 'vidro' || st.visual === 'imagem')));
   $('#edVisual').closest('label').hidden = !(st.tipo === 'texto' || st.tipo === 'foto');
   $('#blocoCor').hidden = !((st.tipo === 'texto' && ['nativo','conversa','anuncio','capa','vidro'].includes(st.visual) && !(st.visual === 'vidro' && fotos[st.id])) || st.tipo === 'resposta');
   const ad = st.sticker.tipo; $('#rotAdesivoTxt').hidden = ad === 'nenhum'; $('#rotOpcoes').hidden = !(ad === 'enquete' || ad === 'quiz');
@@ -985,7 +1019,7 @@ $('#btApagarSeq').onclick = () => { $('#confirmaApagar').hidden = false; };
 $('#btNaoApagar').onclick = () => { $('#confirmaApagar').hidden = true; };
 $('#btSimApagar').onclick = () => { atual.stories.forEach(x => delete fotos[x.id]); seqs = seqs.filter(s => s !== atual); atual = null; salvarFotos(); salvarSeqs(); ir('hoje'); };
 function aplicarEstilo(seq, estilo){
-  if (!estilo) return; const bonitos = ['vidro','vidro','anuncio','vidro','conversa','vidro','manchete'];
+  if (!estilo) return; const bonitos = ['imagem','vidro','imagem','anuncio','vidro','imagem','conversa'];
   seq.stories.forEach((x,i) => { if (x.tipo !== 'texto' || x.visual === 'ritual' || x.visual === 'capa') return; if (estilo === 'natural') x.visual = 'nativo'; else if (estilo === 'bonito') x.visual = bonitos[i % bonitos.length]; else x.visual = i % 2 ? bonitos[(i>>1) % bonitos.length] : 'nativo'; x.fundo = ''; });
 }
 function lerFoto(arq, max){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, max/Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width*k); c.height = Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg', .82)); }; im.onerror = rej; im.src = r.result; }; r.onerror = rej; r.readAsDataURL(arq); }); }
@@ -995,7 +1029,8 @@ $('#btTirarFoto').textContent = 'Tirar a foto';
 
 /* ========== conferência antes de postar (GÊNESE: valide antes de postar) ========== */
 const PROIBIDAS = ['exclusivo','único','promocional','não perca','infalível','imperdível','garantido','revolucionário','transformador','descubra','o segredo','você sabia que','vamos falar sobre','game changer','confira','dica de ouro','vou te ensinar','simples assim'];
-const FRACAS = ['talvez','meio que','acho que','um pouco','basicamente','na verdade','tipo assim','de certa forma','quem sabe','meio'];
+const FRACAS = ['talvez','meio que','acho que','um pouco','basicamente','na verdade','tipo assim','de certa forma','quem sabe'];
+const CARA_IA = ['jornada','potencializar','desbloquear','mergulhar','navegar','cenário','ecossistema','alavancar','robusto','crucial','fundamental','essencial','no fim do dia','vale lembrar','em resumo','afinal','isso muda tudo','a verdade é que','e o melhor','spoiler','plot twist'];
 const BAIT = /compartilh|marca (um|uma|aquele|o) amig|manda (pra|para) (alguém|quem)|me segue|comenta (aqui|a palavra|“|")|curte se/i;
 function conferencia(seq){
   const av = []; const n = seq.stories.length;
@@ -1004,6 +1039,9 @@ function conferencia(seq){
     PROIBIDAS.forEach(w => { if (baixo.includes(w)) av.push(num + 'tira "' + w + '" (cheira a venda).'); });
     const fr = FRACAS.filter(w => new RegExp('(^|[^\\p{L}])' + w + '([^\\p{L}]|$)', 'iu').test(baixo)); if (fr.length) av.push(num + 'palavra fraca: ' + fr.join(', ') + '.');
     if (BAIT.test(t)) av.push(num + 'pedido de interação forçado. Troque por uma pergunta de verdade.');
+    const ia = CARA_IA.filter(w => new RegExp('(^|[^\\p{L}])' + w + '([^\\p{L}]|$)', 'iu').test(baixo)); if (ia.length) av.push(num + 'cara de IA: ' + ia.join(', ') + '.');
+    if (/[—–]/.test(t)) av.push(num + 'tem travessão. Troque por ponto.');
+    if (/!/.test(t)) av.push(num + 'tem exclamação. Tire.');
     if (x.tipo !== 'gravar'){
       const pal = t.replace(/\*\*/g,'').split(/\s+/).filter(Boolean).length; if (pal > 45) av.push(num + pal + ' palavras. Fragmente: no máximo 40.');
       t.replace(/\*\*/g,'').split(/[.!?\n]+/).forEach(f => { const k = f.split(/\s+/).filter(Boolean).length; if (k > 22) av.push(num + 'frase de ' + k + ' palavras. Quebre com ponto-final.'); });
@@ -1057,7 +1095,7 @@ async function candidatos(q, usadas){
 function creditoDe(x){ if (x.licenca) return 'Foto: ' + (x.creator || 'autor desconhecido') + ' (' + x.licenca + ')'; const lic = [x.license ? 'CC ' + String(x.license).toUpperCase() : '', x.license_version || ''].join(' ').trim(); return 'Foto: ' + (x.creator || 'autor desconhecido') + (lic ? ' (' + lic + ')' : '') + (x.source && x.source !== 'Wikimedia Commons' ? '' : ''); }
 async function porFoto(stx, x){ const b = await baixarImagem(x.url, 12000); if (!b) return false; const uri = await lerFoto(b, 1600); fotos[stx.id] = uri; stx.credito = creditoDe(x); stx.fotoUrl = x.url; salvarFotos(); return true; }
 const fotoCands = new Map(); let autoRodando = false; const tentouFotos = new Set();
-function precisaFoto(x){ return x.imgBusca && !fotos[x.id] && (x.visual === 'vidro' || x.tipo === 'foto'); }
+function precisaFoto(x){ return x.imgBusca && !fotos[x.id] && (x.visual === 'vidro' || x.visual === 'imagem' || x.tipo === 'foto'); }
 async function autoFotos(seq, silencioso){
   if (MODO !== 'fotos' || autoRodando || !seq) return;
   const lista = seq.stories.filter(precisaFoto); if (!lista.length){ if (!silencioso) toast('Todos os stories com foto já têm foto.'); return; }
@@ -1142,8 +1180,8 @@ function renderAcao(){
     $('#btPrincipal').disabled = !n;
     $('#btPrincipal').onclick = () => MODO === 'fotos' ? enviar(atual.stories.filter(exportavel)) : baixarAzul(atual.stories.filter(exportavel));
   } else if (abaAtual === 'hoje' && porDia(hoje()).length && !porDia(hoje()).some(s => s.status === 'postado') && !diretos.includes(hoje())){
-    const s0 = porDia(hoje())[0];
-    a.innerHTML = `<button class="pri" id="btAbrirHoje">Ver e baixar os stories de hoje</button>`;
+    const s0 = [...porDia(hoje())].sort((x, y) => (x.gatilho === 'alta') - (y.gatilho === 'alta'))[0];
+    a.innerHTML = `<button class="pri" id="btAbrirHoje">Abrir o story de hoje</button>`;
     $('#btAbrirHoje').onclick = () => { setModo(false); abrirSeq(s0.id); };
   }
 }
@@ -1209,19 +1247,31 @@ POSICIONAMENTO (v4)
 
 REGRA DE OURO: só fatos que estão na entrada do Daniel. Não invente cena, hora, duração, número, nome, lugar, diálogo, cliente, sensação ou resultado. Se faltar matéria-prima, faça perguntas (formato "perguntas") ou transforme o story em "gravar", com roteiro do que mostrar e falar ao vivo. Opinião atribuída ao Daniel que não esteja na entrada entra também em "conferir".
 
-VOZ (método de conversa do Elton Luiz, adaptado; não copie frases dele). Vale para todos os dias da rotina.
-- Como quem conta para um amigo o que aconteceu hoje. Frases curtas. Uma ideia por story. Muita quebra de linha.
-- Detalhe concreto (o detalhe do detalhe) tirado da entrada; número específico só se ele disse.
-- Coloquial com medida ("cara", "sabe?", "né") e no máximo 1 vez por sequência cada. Sem palavrão, a menos que esteja na entrada.
-- Sem jargão de marketing (estratégia, framework, alavancar, escalar, método comprovado) e sem hype de IA.
+COMO ESCREVER: ESTRUTURA DO LADEIRA, VOZ DO ELTON, ZERO CARA DE IA
+A entrada do Daniel é MATÉRIA-PRIMA, nunca o texto final. Não resuma nem adapte o texto dele: reescreva do zero, mantendo só os fatos e a ideia, com a estrutura e a voz abaixo. Se o texto final ficar parecido com a entrada, você errou.
 
-MÉTODO (Leandro Ladeira, Light Copy e Stories 10x)
-- Premissa, não promessa: premissa despretensiosa, incontestável e simples. A pessoa chega sozinha à conclusão.
-- Escalada de atenção: cada story faz querer ver o próximo; o último story antes da interação não pode ser o mais fraco.
-- Use 2 ou 3 destes recursos por sequência (não empilhe): escalada de atenção, super sincero (dizer o que todo mundo pensa e ninguém fala), crônica (detalhe do detalhe), sentir na pele, "sempre que" (âncora no cotidiano), metáfora, antítese, criação de personagem, ironia leve.
-- Gancho forte: curiosidade, frase que engasga, desabafo, argumento incontestável, cara de conversa. Proibido no gancho: técnico, imperativo, promessa, pretensão.
-- Palavras proibidas: exclusivo, único, promocional, não perca, infalível, imperdível, garantido, revolucionário, transformador, "agora" como urgência, descubra, o segredo, você sabia que, vamos falar sobre, game changer, confira, dica de ouro, vou te ensinar, simples assim.
-- Sem engagement bait: nada de "compartilha", "marca um amigo", "manda pra alguém", "me segue", "comenta X", "curte se concorda".
+ESTRUTURA (marketing de premissas do Leandro Ladeira, Light Copy e Stories 10x). Cada sequência segue esta ordem:
+1. Premissa de abertura: uma cena ou um fato concreto que a pessoa não consegue contestar. Despretensiosa (não cheira a venda), incontestável e simples (uma frase, uma ideia). Gancho forte = curiosidade, frase que engasga, desabafo ou argumento incontestável. Proibido abrir com conceito, imperativo, promessa ou pergunta retórica.
+2. Escalada de atenção: cada story acrescenta uma premissa nova (premissa 1 + premissa 2 + premissa 3) e termina abrindo a porta do próximo. Nunca repetir a ideia com outras palavras. O story seguinte sempre é mais forte que o anterior.
+3. Virada super sincera: o que todo mundo pensa e ninguém fala, ou uma antítese seca. É aqui que entra a opinião do Daniel.
+4. Conclusão que a pessoa tira sozinha: não explique a moral. No máximo uma âncora "sempre que…" ligada ao cotidiano.
+5. Fecho pelo "quadro na parede", nunca pela "furadeira": a interação fala do resultado que a pessoa quer, não do esforço.
+Recursos do Ladeira (2 ou 3 por sequência, sem empilhar): super sincero, crônica (detalhe do detalhe), sentir na pele, sempre que, metáfora, antítese, criação de personagem, ironia leve.
+
+VOZ (forma de falar do Elton Luiz; não copie frases dele):
+- Como quem manda áudio pra um amigo contando o que aconteceu hoje. Primeira pessoa. Frases curtas, algumas bem curtas ("Voltei pro zero."), uma mais longa quando a emoção pede.
+- Detalhe concreto da entrada: o objeto, o número, a hora, o que alguém disse. Nada genérico.
+- Pode começar frase com "E" ou "Mas". Pode usar "cara", "sei lá", "olha", "sabe?" (no máximo uma vez cada por sequência). Sem palavrão, salvo se estiver na entrada.
+
+ANTI-IA (o texto não pode parecer escrito por IA):
+- Proibido travessão (—) e meia-risca (–) no texto. Use ponto.
+- Proibido "não é X, é Y" mais de uma vez na sequência. Proibido trio de adjetivos ou lista de três coisas em sequência ("rápido, simples e eficaz").
+- Proibidas estas palavras e expressões: jornada, potencializar, desbloquear, mergulhar, navegar, cenário, ecossistema, alavancar, escalar, estratégia, framework, robusto, crucial, fundamental, essencial, transformar, impactar, "no fim do dia", "vale lembrar", "em resumo", "afinal", "isso muda tudo", "o segredo", "a verdade é que", "e o melhor", "spoiler", "plot twist", "bora", "simples assim".
+- Sem emoji, sem exclamação, sem dois-pontos dramático antes da revelação, sem frase de efeito simétrica em todo story. Varie o tamanho das frases. Nada de pergunta retórica em série.
+- Prefira palavra do dia a dia à palavra bonita. Se uma frase parece legenda de banco de imagem, reescreva.
+
+PALAVRAS PROIBIDAS DE VENDEDOR: exclusivo, único, promocional, não perca, infalível, imperdível, garantido, revolucionário, "agora" como urgência, descubra, você sabia que, vamos falar sobre, game changer, confira, dica de ouro, vou te ensinar.
+Sem engagement bait: nada de "compartilha", "marca um amigo", "manda pra alguém", "me segue", "comenta X", "curte se concorda".
 
 ROTINA DE STORIES (Protocolo GÊNESE adaptado, SEM OFERTAS por enquanto)
 - Stories servem para mostrar que o Daniel sabe resolver o problema de quem vive do próprio trabalho e trava no conteúdo, e como fica a vida depois disso. Se não serve para isso nem para aproximar, não entra.
@@ -1246,16 +1296,17 @@ ESTRUTURA DA SEQUÊNCIA
 TIPOS E VISUAIS
 - tipo "texto": imagem com texto. tipo "foto": foto do Daniel (ele escolhe) com texto curto por cima; use quando a entrada fala de algo que dá para fotografar (mesa, tela, lugar, objeto). tipo "gravar": ele grava no Instagram falando para a câmera ou mostrando a tela; preencha "roteiro" (falas em linhas curtas, 15 a 40 segundos, começa pelo gancho) e "mostrar" (o que filmar).
 - tipo "resposta": resposta de caixinha (preencha "pergunta"). tipo "case": resultado com print (o Daniel escolhe a imagem).
-- visual "vidro": o mais elegante, igual aos carrosséis do Daniel: painel de vidro líquido sobre uma FOTO de fundo, texto curto em serifa. No estilo elegante, a maioria dos stories de texto é "vidro". Todo story "vidro" leva "imgBusca": busca de foto em inglês, 2 a 5 palavras simples de banco de imagem, assunto + cor + lugar ("red umbrella gray street", "coffee cup wooden desk morning"). Um único assunto, grande, com contraste. Nada de clichê (escadas, estradas, lâmpada, quebra-cabeça, xadrez, engrenagem, alvo, montanha, foguete, cérebro, aperto de mão, notebook, post-its, gráfico). Cada story pede uma foto diferente.
+- visual "imagem": só a FOTO de fundo, em tela cheia, com o texto direto por cima (sem painel). Texto curto, até 25 palavras. Leva "imgBusca". Ótimo para abrir a sequência e para cenas.
+- visual "vidro": o mais elegante, igual aos carrosséis do Daniel: painel de vidro líquido sobre uma FOTO de fundo, texto curto em serifa. No estilo elegante, alterne "imagem" e "vidro" na maioria dos stories de texto. Todo story "imagem" ou "vidro" leva "imgBusca": busca de foto em inglês, 2 a 5 palavras simples de banco de imagem, assunto + cor + lugar ("red umbrella gray street", "coffee cup wooden desk morning"). Um único assunto, grande, com contraste. Nada de clichê (escadas, estradas, lâmpada, quebra-cabeça, xadrez, engrenagem, alvo, montanha, foguete, cérebro, aperto de mão, notebook, post-its, gráfico). Cada story pede uma foto diferente.
 - visual: "nativo" (parece feito no próprio Instagram: texto centralizado em fundo de cor), "manchete" (fundo preto, frase grande), "papel" (fundo claro), "nota" (app de notas, bom para lista curta ou desabafo), "conversa" (parece um tweet, bom para frase de opinião), "anuncio" (título grande em serifa no 1º parágrafo; depois de uma linha em branco, texto ou lista "1. … 2. …"), "ritual" (capa fixa da caixinha; só no fim dos dias de caixinha).
-- Estilo natural: maioria nativo, foto e gravar. Estilo bonito (elegante): maioria vidro, com manchete, anuncio e conversa. Misto: alterne nativo e vidro.
+- Estilo natural: maioria nativo, foto e gravar. Estilo bonito (elegante): alterne imagem e vidro, com um anuncio ou conversa no meio. Misto: alterne nativo e vidro.
 - Alterne visuais; nunca 3 stories seguidos iguais.
 
 FORMATO DA RESPOSTA
 Se faltar matéria-prima (menos de 3 fatos concretos na entrada) e a entrada não pedir para escrever mesmo assim:
 {"perguntas":["3 a 5 perguntas curtas e soltas, tipo: quantas vezes você já fez isso? o que cansa nisso? alguém falou alguma coisa? o que você pensa fazendo isso? vale a pena?"]}
 Senão:
-{"sequencias":[{"data":"AAAA-MM-DD","titulo":"até 40 caracteres","gatilho":"dia|abertura|caixinha|bastidor|leve|alta|carrossel|opiniao|destaque","dispositivos":["recursos do Ladeira usados"],"stories":[{"tipo":"texto|foto|gravar|resposta|case","visual":"vidro|nativo|manchete|papel|nota|conversa|anuncio|ritual","pergunta":"só para resposta","imgBusca":"só para vidro: busca de foto em inglês","texto":"texto que aparece (para gravar: a frase de abertura)","roteiro":"só para gravar","mostrar":"só para gravar ou foto: o que mostrar","fundo":"opcional para nativo: #0F0F10, #FFD400, #F5F3EE, #1B2A6B, #C2362B, #2E5E4E ou grad","sticker":{"tipo":"nenhum|caixinha|enquete|quiz|slider|link","texto":"pergunta curta do adesivo","opcoes":["só para enquete e quiz"]}}],"respostasModelo":["2 ou 3 respostas que o Daniel pode usar amanhã se a caixinha vier fraca, escritas como pergunta de seguidor + resposta curta dele, sem inventar fato"],"conferir":["cada afirmação sobre o Daniel ou opinião dele que não está na entrada"]}]}`;
+{"sequencias":[{"data":"AAAA-MM-DD","titulo":"até 40 caracteres","gatilho":"dia|abertura|caixinha|bastidor|leve|alta|carrossel|opiniao|destaque","dispositivos":["recursos do Ladeira usados"],"stories":[{"tipo":"texto|foto|gravar|resposta|case","visual":"imagem|vidro|nativo|manchete|papel|nota|conversa|anuncio|ritual","pergunta":"só para resposta","imgBusca":"só para imagem e vidro: busca de foto em inglês","texto":"texto que aparece (para gravar: a frase de abertura)","roteiro":"só para gravar","mostrar":"só para gravar ou foto: o que mostrar","fundo":"opcional para nativo: #0F0F10, #FFD400, #F5F3EE, #1B2A6B, #C2362B, #2E5E4E ou grad","sticker":{"tipo":"nenhum|caixinha|enquete|quiz|slider|link","texto":"pergunta curta do adesivo","opcoes":["só para enquete e quiz"]}}],"respostasModelo":["2 ou 3 respostas que o Daniel pode usar amanhã se a caixinha vier fraca, escritas como pergunta de seguidor + resposta curta dele, sem inventar fato"],"conferir":["cada afirmação sobre o Daniel ou opinião dele que não está na entrada"]}]}`;
 
 const RITMO_SEMANA = `Rotina da semana (Protocolo GÊNESE adaptado, sem ofertas): segunda = abertura; terça a sexta = caixinha; sábado = bastidor; domingo = leve. Use o gatilho de cada dia.
 Nos dias de caixinha da semana ainda não chegaram perguntas: plante 2 ou 3 por dia (diferentes entre os dias, sobre conteúdo, marca, ser lembrado e IA nos bastidores), marcadas em "conferir". Nos dias sem fato dado pelo Daniel, o conteúdo pessoal vira "gravar" com roteiro em forma de perguntas para ele responder ao vivo.`;
@@ -1297,7 +1348,7 @@ async function gerar(forcar){
       perguntasGate = j.perguntas; $('#gateLista').innerHTML = j.perguntas.map(p => '<li>'+esc(p)+'</li>').join(''); $('#gate').hidden = false; $('#btPular').hidden = false; $('#gateTxt').focus();
       g.hidden = true; $('#btGerar').textContent = 'Escrever com as respostas';
     } else {
-      const lista = (j.sequencias || []).map(normalizar);
+      const ent = $('#entradaTxt').value.trim(); const lista = (j.sequencias || []).map(x => normalizar(Object.assign({ entrada: ent }, x)));
       if (!lista.length) throw new Error('vazio');
       const estilo = $('#optEstilo').value; if (estilo === 'natural') lista.forEach(s => aplicarEstilo(s, 'natural'));
       seqs.push(...lista); salvarSeqs(); g.hidden = true; $('#gate').hidden = true; $('#gateTxt').value = ''; $('#entradaTxt').value = '';
@@ -1311,6 +1362,21 @@ async function gerar(forcar){
   } finally { $('#btGerar').disabled = false; $('#btPorMim').disabled = false; $('#btParar').hidden = true; ctl = null; }
 }
 $('#btGerar').onclick = () => gerar(false);
+async function reescrever(){
+  if (!sampleFn || !atual){ toast('Reescrever só funciona com o Motor aberto no Claude.'); return; }
+  const b = $('#btReescrever'), stt = $('#reescStatus'); b.disabled = true; stt.textContent = 'Reescrevendo… pode levar até um minuto.';
+  const atualSeq = { titulo: atual.titulo, gatilho: atual.gatilho, stories: atual.stories.map(x => ({ tipo:x.tipo, visual:x.visual, pergunta:x.pergunta, texto:x.texto, roteiro:x.roteiro, mostrar:x.mostrar, imgBusca:x.imgBusca, sticker:x.sticker })) };
+  const pedido = `${REGRAS}\n\nPEDIDO: REESCREVA esta sequência de ${atual.data} (${DIAS[deIso(atual.data).getDay()]}, rotina: ${rotinaDe(atual.data).nome}). Mantenha os mesmos fatos, o mesmo número de stories, a mesma ordem, os mesmos tipos e visuais, as mesmas buscas de foto e os mesmos adesivos. Troque só o texto (e o roteiro, se houver) por uma versão muito melhor: estrutura do Ladeira, voz do Elton, zero cara de IA. Não use o formato "perguntas".\n\nENTRADA ORIGINAL DO DANIEL:\n<<<\n${atual.entrada || '(não guardada)'}\n>>>\n\nSEQUÊNCIA ATUAL (JSON):\n${JSON.stringify(atualSeq)}`;
+  try {
+    const r = await sampleFn(pedido, { modelTier:'default', cache:false, onText: ({ text }) => { stt.textContent = 'Reescrevendo… ' + text.length + ' caracteres'; } });
+    const j = extrairJSON(r.text); const nova = (j.sequencias || [])[0]; if (!nova || !nova.stories) throw new Error('vazio');
+    nova.stories.forEach((x, i) => { const o = atual.stories[i]; if (!o) return; o.texto = x.texto || o.texto; if (x.roteiro) o.roteiro = x.roteiro; if (x.pergunta) o.pergunta = x.pergunta; if (x.sticker && x.sticker.texto) o.sticker.texto = x.sticker.texto; });
+    if (nova.titulo) atual.titulo = nova.titulo.slice(0, 60); if (nova.conferir) atual.conferir = nova.conferir; if (nova.dispositivos) atual.dispositivos = nova.dispositivos;
+    salvarSeqs(); renderStories(); stt.textContent = 'Reescrita. Confira em "Detalhes da sequência" o que é opinião sua.';
+  } catch(e){ stt.textContent = e && e.code === 'not_granted' ? 'Sem permissão para usar o Claude nesta página.' : 'Não consegui reescrever agora. Tente de novo.'; }
+  finally { b.disabled = false; }
+}
+$('#btReescrever').onclick = reescrever;
 $('#btPorMim').onclick = () => { if (entrada !== 'semana' && entrada !== 'destaque' && !$('#entradaTxt').value.trim()) escolherEntrada(entradaDoDia()); gerar(true); };
 $('#btPular').onclick = () => gerar(true);
 $('#btParar').onclick = () => { ctl && ctl.abort(); };
