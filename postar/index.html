@@ -401,6 +401,8 @@ const K = { seqs:'dan_stories_seqs_v1', cfg:'dan_stories_cfg_v1', aba:'dan_stori
 function ler(k, pad){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : pad; } catch(e){ return pad; } }
 function gravar(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
 let seqs = ler(K.seqs, []);
+let diretos = ler('dan_stories_diretos_v1', []); // dias em que postou direto no Instagram
+function marcarDireto(d, sim){ diretos = diretos.filter(x => x !== d); if (sim) diretos.push(d); gravar('dan_stories_diretos_v1', diretos); }
 let cfg = Object.assign({ nome:'Daniel Barboza', arroba:'', avatar:'', hora:'06:30', ritualTexto:'Me pergunta sobre conteúdo, marca e ser lembrado.', ritualCor:'#0F0F10', ritualFoto:'' }, ler(K.cfg, {}));
 if (cfg.hora === '19:00') cfg.hora = '06:30';
 let fotos = ler(K.fotos, {}); // id do story -> dataURL (fica só neste aparelho)
@@ -695,7 +697,7 @@ window.addEventListener('popstate', e => { if (!$('#tele').hidden){ fecharTele()
 
 /* ========== ofensiva e semana ========== */
 function porDia(d){ return seqs.filter(s => s.data === d); }
-function estadoDia(d){ const l = porDia(d); if (!l.length) return ''; return l.some(s => s.status === 'postado') ? 'post' : 'plan'; }
+function estadoDia(d){ const l = porDia(d); if (diretos.includes(d)) return 'post'; if (!l.length) return ''; return l.some(s => s.status === 'postado') ? 'post' : 'plan'; }
 function ofensiva(){ let d = hoje(); if (estadoDia(d) !== 'post') d = soma(d,-1); let n = 0; while (estadoDia(d) === 'post'){ n++; d = soma(d,-1); } return n; }
 function semanaHTML(ini, sel){
   let h = ''; for (let i=0;i<7;i++){ const d = soma(ini,i), dd = deIso(d); const e = estadoDia(d);
@@ -708,22 +710,29 @@ function linhaSeq(s){
 }
 function ligarLista(raiz){ raiz.querySelectorAll('[data-abrir]').forEach(b => b.onclick = () => abrirSeq(b.dataset.abrir)); }
 
+function blocoDireto(d){
+  if (diretos.includes(d)) return `<div class="linha"><span class="okc" style="color:var(--ok);font-weight:700">Postado direto no Instagram</span><button class="peq fant" data-direto="nao">Desfazer</button></div>`;
+  if (porDia(d).some(s => s.status === 'postado')) return '';
+  return d <= hoje() ? `<button data-direto="sim">Postei direto no Instagram</button>` : '';
+}
+function ligarDireto(raiz, d, depois){ raiz.querySelectorAll('[data-direto]').forEach(b => b.onclick = () => { const sim = b.dataset.direto === 'sim'; marcarDireto(d, sim); depois(); if (sim) toast(ofensiva()+' '+(ofensiva()===1?'dia seguido':'dias seguidos')+'. Valeu o espontâneo.'); }); }
 function renderHoje(){
   const n = ofensiva(); $('#ofensivaN').textContent = n;
   $('#ofensivaTxt').textContent = n === 1 ? 'dia seguido postando' : 'dias seguidos postando';
   $('#hojeData').textContent = rotuloDia(hoje());
-  const semanas = new Set(seqs.filter(s => s.status === 'postado').map(s => inicioSemana(s.data))).size;
+  const semanas = new Set(seqs.filter(s => s.status === 'postado').map(s => inicioSemana(s.data)).concat(diretos.map(inicioSemana))).size;
   $('#habito').textContent = 'Semana ' + Math.max(1, semanas) + ' de 50 do hábito · meta de hoje: ' + rotinaDe(hoje()).meta;
   const sh = $('#semanaHoje'); sh.innerHTML = semanaHTML(inicioSemana(hoje())); sh.querySelectorAll('.dia').forEach(b => b.onclick = () => { semSel = b.dataset.d; semIni = inicioSemana(semSel); ir('agenda'); });
   const l = porDia(hoje()); const c = $('#hojeCartao'); const R = rotinaDe(hoje());
   const faixa = `<div class="rotina"><small>Hoje é dia de</small><b>${R.nome}</b><p>${R.dica}</p></div>`;
   if (l.length){
-    c.innerHTML = faixa + `<div class="lista-seq">${l.map(linhaSeq).join('')}</div>`;
-    ligarLista(c);
+    c.innerHTML = faixa + `<div class="lista-seq">${l.map(linhaSeq).join('')}</div>` + blocoDireto(hoje());
+    ligarLista(c); ligarDireto(c, hoje(), renderHoje);
   } else {
     const prox = seqs.filter(s => s.data > hoje() && s.status !== 'postado').sort((a,b) => a.data < b.data ? -1 : 1)[0];
     c.innerHTML = faixa + `<p class="muted">Hoje ainda não tem story. Um simples hoje vale mais que um perfeito amanhã.</p>
-      <div class="linha">${MODO==='escrita' ? '<button class="pri" data-q="porMim">Escreve por mim</button>' + (R.e==='caixinha' ? '<button data-q="caixinha">Responder a caixinha</button>' : '<button data-q="dia">Contar o dia</button>') : (R.e==='caixinha' ? '<button class="pri" data-q="manual">Montar caixinha</button>' : '')}<button data-q="branco">Escrever eu mesmo</button>${prox ? '<button data-q="puxar">Usar a de '+DIAS[deIso(prox.data).getDay()]+'</button>' : ''}</div>`;
+      <div class="linha">${MODO==='escrita' ? '<button class="pri" data-q="porMim">Escreve por mim</button>' + (R.e==='caixinha' ? '<button data-q="caixinha">Responder a caixinha</button>' : '<button data-q="dia">Contar o dia</button>') : (R.e==='caixinha' ? '<button class="pri" data-q="manual">Montar caixinha</button>' : '')}<button data-q="branco">Escrever eu mesmo</button>${prox ? '<button data-q="puxar">Usar a de '+DIAS[deIso(prox.data).getDay()]+'</button>' : ''}</div>` + blocoDireto(hoje());
+    ligarDireto(c, hoje(), renderHoje);
     c.querySelectorAll('[data-q]').forEach(b => b.onclick = () => {
       const q = b.dataset.q;
       if (q === 'branco') emBranco(hoje());
@@ -744,8 +753,8 @@ function renderAgenda(){
   const l = porDia(semSel); const c = $('#diaCartao');
   const RS = rotinaDe(semSel);
   c.innerHTML = `<h3>${rotuloDia(semSel)}</h3><p class="dica"><b>${RS.nome}</b> · ${RS.meta}</p>` + (l.length ? `<div class="lista-seq">${l.map(linhaSeq).join('')}</div>` : '<p class="muted">Nada planejado.</p>') +
-    `<div class="linha">${MODO==='escrita' ? '<button class="peq pri" data-q="criar">Criar para este dia</button>' : ''}<button class="peq" data-q="branco">Escrever eu mesmo</button></div>`;
-  ligarLista(c);
+    `<div class="linha">${MODO==='escrita' ? '<button class="peq pri" data-q="criar">Criar para este dia</button>' : ''}<button class="peq" data-q="branco">Escrever eu mesmo</button></div>` + blocoDireto(semSel);
+  ligarLista(c); ligarDireto(c, semSel, renderAgenda);
   c.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { if (b.dataset.q === 'branco') emBranco(semSel); else { $('#optData').value = semSel; escolherEntrada(RS.e); ir('criar'); } });
   $('#horaLembrete').value = cfg.hora || '06:30';
 }
