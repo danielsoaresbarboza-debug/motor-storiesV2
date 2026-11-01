@@ -3,40 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icone-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="theme-color" content="#C2362B">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icone-192.png"><link rel="apple-touch-icon" href="apple-touch-icon.png"><meta name="theme-color" content="#151517">
 </head>
 <body>
-<title>Motor Stories · Postar</title>
+<title>Motor Stories</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap">
 <style>
 /* Layout: app de uma coluna com abas embaixo; a prévia 9:16 é o centro de cada tela. Azul = escrever (dentro do Claude). Vermelho = postar (fora). */
 :root{
-  --bg:#EDF1FF; --surface:#FFFFFF; --fg:#10142B; --muted:#5A6185; --line:#D6DCF3; --ink:#2F55E8; --ink-fg:#FFFFFF;
-  --amarelo:#FFD400; --preto:#0F0F10; --papel:#F5F3EE; --ok:#1F8A4C; --aviso:#B26A00;
+  --bg:#F3F2EF; --surface:#FFFFFF; --fg:#151517; --muted:#6B6A70; --line:#E1DFDA; --ink:#151517; --ink-fg:#FFD400;
+  --amarelo:#FFD400; --preto:#0F0F10; --papel:#F5F3EE; --ok:#1F8A4C; --aviso:#A85F00; --suave:#ECEAE5;
   --f-corpo:"Instrument Sans",Roboto,"Segoe UI",system-ui,sans-serif; --f-display:"Newsreader",Georgia,"Times New Roman",serif;
   --r:16px; color-scheme:light;
 }
-:root.vermelho{ --bg:#FFF0EE; --surface:#FFFFFF; --fg:#2A100D; --muted:#86534D; --line:#F2D3CE; --ink:#C2362B; }
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){ --bg:#0A0F24; --surface:#141A36; --fg:#EEF1FF; --muted:#9AA3CF; --line:#262E57; --ink:#7C93FF; --ink-fg:#0A0F24; --ok:#4CC27F; --aviso:#F0B04A; color-scheme:dark }
-  :root.vermelho:not([data-theme="light"]){ --bg:#1E0C0A; --surface:#2B1512; --fg:#FFF0EE; --muted:#D59C94; --line:#43221E; --ink:#FF7A6E; --ink-fg:#1E0C0A }
+  :root:not([data-theme="light"]){ --bg:#0F0F11; --surface:#18181B; --fg:#EDECE8; --muted:#9A99A0; --line:#2C2C31; --ink:#FFD400; --ink-fg:#151517; --ok:#4CC27F; --aviso:#F0B04A; --suave:#222226; color-scheme:dark }
 }
-:root[data-theme="dark"]{ --bg:#0A0F24; --surface:#141A36; --fg:#EEF1FF; --muted:#9AA3CF; --line:#262E57; --ink:#7C93FF; --ink-fg:#0A0F24; --ok:#4CC27F; --aviso:#F0B04A; color-scheme:dark }
-:root.vermelho[data-theme="dark"]{ --bg:#1E0C0A; --surface:#2B1512; --fg:#FFF0EE; --muted:#D59C94; --line:#43221E; --ink:#FF7A6E; --ink-fg:#1E0C0A }
+:root[data-theme="dark"]{ --bg:#0F0F11; --surface:#18181B; --fg:#EDECE8; --muted:#9A99A0; --line:#2C2C31; --ink:#FFD400; --ink-fg:#151517; --ok:#4CC27F; --aviso:#F0B04A; --suave:#222226; color-scheme:dark }
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--f-corpo);-webkit-tap-highlight-color:transparent}
-body::before{content:"";position:fixed;inset:0 0 auto;height:calc(env(safe-area-inset-top,0px) + 5px);background:var(--ink);z-index:20}
+body::before{content:"";position:fixed;inset:0 0 auto;height:calc(env(safe-area-inset-top,0px) + 4px);background:var(--amarelo);z-index:20}
 .app{max-width:620px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 190px}
 header.topo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .marca{font:400 30px/1 var(--f-display);letter-spacing:-.01em}
-.marca i{color:var(--ink)}
-.selo{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.12em;padding:5px 9px;border-radius:999px;background:var(--ink);color:var(--ink-fg)}
+.marca i{color:var(--fg);background:linear-gradient(transparent 62%,var(--amarelo) 62%);padding:0 2px}
+.avatar{margin-left:auto;width:44px;height:44px;border-radius:50%;padding:0;min-height:44px;overflow:hidden;background:var(--suave);font:700 16px var(--f-corpo)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.selo{display:none;font-size:11px;font-weight:700;letter-spacing:.12em;padding:5px 9px;border-radius:999px;background:var(--ink);color:var(--ink-fg)}
 h2{font:400 26px/1.1 var(--f-display);margin:0;text-wrap:balance}
 h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:600}
 p{margin:0}
@@ -107,6 +106,19 @@ nav.abas button{border:0;background:transparent;flex-direction:column;gap:3px;pa
 nav.abas button svg{width:22px;height:22px}
 nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
 .digitando .base{display:none}
+.cena{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:12px;border-radius:16px;background:var(--surface);border:1px solid var(--line)}
+.cena.sel{border-color:var(--fg);box-shadow:0 0 0 1px var(--fg)}
+.cena .ver{padding:0;border:0;background:none;min-height:0;border-radius:12px;align-self:start}
+.cena .ver img{width:96px;height:171px;border-radius:12px;object-fit:cover;display:block;background:var(--line)}
+.cena .lado{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cena .num{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.cena textarea,.cena input{min-height:0;background:var(--bg);border-color:transparent;padding:10px 12px;font-size:15px;line-height:1.45;resize:none}
+.cena textarea:focus,.cena input:focus{border-color:var(--line);background:var(--surface)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button,.chips a{padding:7px 11px;min-height:36px;font-size:13px;font-weight:600}
+.chip-info{font-size:12.5px;color:var(--muted);background:var(--suave);border-radius:10px;padding:8px 10px}
+.colar{border:2px dashed var(--line);border-radius:12px;padding:10px;text-align:center;font-size:13px;color:var(--muted);min-height:44px;background:var(--bg)}
+.toast button{margin-left:10px;background:transparent;color:var(--amarelo);border:0;min-height:0;padding:0 4px;font-size:14px}
 .modo{display:flex;gap:4px;padding:4px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
 .modo button{flex:1;border:0;background:transparent;min-height:40px;font-size:14px;color:var(--muted)}
 .modo button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
@@ -145,7 +157,8 @@ details.mais[open]>summary{margin-bottom:10px}
 <div class="app">
   <header class="topo">
     <div class="marca">Motor <i>Stories</i></div>
-    <span class="selo" id="selo">ESCRITA</span>
+    <span class="selo" id="selo"></span>
+    <button class="avatar" id="btAvatarTopo" aria-label="Foto e nome do perfil"></button>
   </header>
 
   <!-- HOJE -->
@@ -162,8 +175,8 @@ details.mais[open]>summary{margin-bottom:10px}
     <div class="guia" id="guia">
       <h3>Como postar em 1 minuto</h3>
       <ol>
-        <li>Toque em <b>Ver e baixar</b> na sequência do dia.</li>
-        <li>Toque em <b>Baixar stories</b>: as imagens vão para a galeria do celular.</li>
+        <li>Em <b>Hoje</b>, o app mostra qual sequência postar. Toque em <b>Ver antes</b> se quiser ler o texto de cada story.</li>
+        <li>Toque em <b>Baixar e postar</b> (no app instalado: <b>Postar no Instagram</b>).</li>
         <li>No Instagram, abra o story, escolha a imagem e coloque o adesivo que o app indicar.</li>
         <li>Volte e toque em <b>Postei</b>. A sequência de dias sobe.</li>
       </ol>
@@ -223,7 +236,8 @@ details.mais[open]>summary{margin-bottom:10px}
       <div class="linha">
         <button id="btEmBranco">Escrever eu mesmo</button>
         <button id="btColarJson">Colar JSON</button>
-        <button class="so-fotos" id="btColarAzul">Colar do Motor azul</button>
+        <button class="so-fotos" id="btColarAzul">Colar sequência do Claude</button>
+        <a class="btn so-fotos" href="https://danielsoaresbarboza-debug.github.io/motor-storiesV2/escrita/" target="_blank" rel="noopener">Escrever com o Claude ↗</a>
         <button id="btCaixinhaManual">Montar caixinha</button>
       </div>
       <div class="pilha" id="caixinhaManual" hidden>
@@ -231,7 +245,7 @@ details.mais[open]>summary{margin-bottom:10px}
         <button class="pri" id="btCriarCaixinha">Criar um story por pergunta</button>
         <p class="dica">Cada pergunta vira um story de resposta. No fim entra a capa fixa da caixinha de hoje.</p>
       </div>
-      <textarea id="jsonTxt" hidden placeholder='Cole aqui o JSON da sequência ({"sequencias":[...]}) ou o link do Motor azul'></textarea>
+      <textarea id="jsonTxt" hidden placeholder='Cole aqui o JSON da sequência ({"sequencias":[...]}) ou o link da sequência'></textarea>
       <button id="btImportar" hidden>Importar</button>
     </div>
   </section>
@@ -242,9 +256,12 @@ details.mais[open]>summary{margin-bottom:10px}
     <div id="comSeq" class="pilha">
       <div style="min-width:0"><h2 id="seqTitulo"></h2><p class="dica" id="seqInfo"></p></div>
       <div class="modo" role="group" aria-label="Modo">
-        <button id="modoVer" aria-pressed="true">Ver e baixar</button>
-        <button id="modoEditar" aria-pressed="false">Editar</button>
+        <button id="modoRoteiro" aria-pressed="true">Roteiro</button>
+        <button id="modoPrevia" aria-pressed="false">Prévia</button>
+        <button id="modoAjustar" aria-pressed="false">Ajustar</button>
       </div>
+      <div id="roteiro" class="pilha"></div>
+      <div class="colar" id="colarFoto" hidden contenteditable="true" aria-label="Colar a foto aqui">Toque e segure aqui e escolha <b>Colar</b> para pôr a foto copiada</div>
       <div class="duas">
         <div class="fixa pilha">
           <div class="palco" id="palco"><canvas id="tela" width="1080" height="1920" aria-label="Prévia do story"></canvas><div class="adesivo" id="adesivoGuia" hidden></div></div>
@@ -256,13 +273,8 @@ details.mais[open]>summary{margin-bottom:10px}
           <div class="fita" id="fita"></div>
         </div>
         <div class="pilha">
-          <div class="cartao so-escrita" id="avisoFotos" hidden><h3>Fotos automáticas</h3><p class="dica">Esta sequência tem stories com foto de fundo. Elas entram sozinhas no Motor vermelho, que também envia direto para o Instagram.</p><a class="btn pri" id="btVermelho2" href="#" target="_blank" rel="noopener">Abrir no Motor vermelho ↗</a></div>
+<a id="btVermelho2" hidden href="#"></a>
           <div class="passo" id="passo"></div>
-          <div class="cartao so-escrita" id="cartaoReescrever">
-            <h3>Não ficou bom?</h3>
-            <div class="linha"><button id="btReescrever">Reescrever a sequência com o método</button></div>
-            <p class="dica" id="reescStatus">Refaz o texto do zero com a estrutura do Ladeira, a voz do Elton e as regras anti-IA. Mantém as fotos e a ordem.</p>
-          </div>
 
           <div class="cartao" id="editor" hidden>
             <div class="linha"><span class="etiqueta" id="etTipo"></span></div>
@@ -308,6 +320,13 @@ details.mais[open]>summary{margin-bottom:10px}
 
           <div class="cartao conf" id="conferencia"></div>
 
+        </div>
+      </div>
+          <div class="cartao so-escrita" id="cartaoReescrever">
+            <h3>Não ficou bom?</h3>
+            <div class="linha"><button id="btReescrever">Reescrever a sequência com o método</button></div>
+            <p class="dica" id="reescStatus">Refaz o texto do zero com a estrutura do Ladeira, a voz do Elton e as regras anti-IA. Mantém as fotos e a ordem.</p>
+          </div>
           <details class="mais" id="maisSeq">
             <summary>Detalhes da sequência</summary>
             <div class="pilha">
@@ -327,15 +346,13 @@ details.mais[open]>summary{margin-bottom:10px}
               </div>
               <div class="linha" id="confirmaApagar" hidden><span class="aviso">Apagar esta sequência?</span><button class="peq" id="btSimApagar">Sim, apagar</button><button class="peq" id="btNaoApagar">Não</button></div>
               <div class="so-escrita pilha">
-                <h3>Postar pelo Motor vermelho</h3>
-                <p class="dica">Opcional. O vermelho manda as imagens direto para o Instagram pelo compartilhar do celular.</p>
-                <a class="btn" id="btVermelho" href="#" target="_blank" rel="noopener">Abrir no Motor vermelho ↗</a>
+                <h3>Postar direto no Instagram</h3>
+                <p class="dica">Aqui dentro do Claude o celular não deixa mandar direto para o Instagram. Pelo app instalado (ícone Stories) o botão vira "Postar no Instagram".</p>
+                <a class="btn" id="btVermelho" href="#" target="_blank" rel="noopener">Abrir no app do celular ↗</a>
               </div>
               <p class="dica so-fotos">Para deixar agendado: salve as imagens e programe no Meta Business Suite (Criar story → Programar).</p>
             </div>
           </details>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -363,7 +380,7 @@ details.mais[open]>summary{margin-bottom:10px}
       <h3>Seu perfil nos stories</h3>
       <label for="cfgNome">Nome<input id="cfgNome"></label>
       <label for="cfgArroba">@ do Instagram<input id="cfgArroba" placeholder="@seuperfil"></label>
-      <div class="linha"><label class="btn" for="cfgAvatar" style="flex-direction:row;color:var(--fg)">Foto do perfil<input type="file" id="cfgAvatar" accept="image/*" hidden></label><span class="dica">Aparece no visual Conversa.</span></div>
+      <div class="linha"><label class="btn pri" for="cfgAvatar" style="flex-direction:row;color:var(--ink-fg)">Escolher foto do perfil<input type="file" id="cfgAvatar" accept="image/*" hidden></label><span class="dica">Aparece no topo dos stories, ao lado do seu nome.</span></div>
     </div>
     <div class="cartao">
       <h3>Capa da caixinha</h3>
@@ -416,10 +433,11 @@ details.mais[open]>summary{margin-bottom:10px}
 const qs = new URLSearchParams(location.search);
 const forca = qs.get('modo');
 const MODO = forca === 'fotos' ? 'fotos' : forca === 'escrita' ? 'escrita' : (window.claude ? 'escrita' : 'fotos');
-if (MODO === 'fotos') document.documentElement.classList.add('vermelho');
+
+const PODE_POSTAR = !window.claude && !!(navigator.canShare);
 const LINK_VERMELHO = 'https://danielsoaresbarboza-debug.github.io/motor-storiesV2/postar/';
 const $ = s => document.querySelector(s), $$ = s => Array.from(document.querySelectorAll(s));
-document.getElementById('selo').textContent = MODO === 'fotos' ? 'POSTAR' : 'ESCRITA';
+
 $$(MODO === 'fotos' ? '.so-escrita' : '.so-fotos').forEach(e => e.hidden = true);
 
 /* ========== armazenamento ========== */
@@ -450,7 +468,8 @@ function rotuloDia(s){ const d = deIso(s); return DIAS[d.getDay()]+', '+d.getDat
 /* ========== util ========== */
 const uid = () => Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
 let toastT;
-function toast(m, ms){ let t = $('.toast'); if (!t){ t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); document.body.appendChild(t); } t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(()=>{ t.hidden = true; }, ms||3200); }
+function toast(m, ms, desfazer){ let t = $('.toast'); if (!t){ t = document.createElement('div'); t.className='toast'; t.setAttribute('role','status'); document.body.appendChild(t); } t.textContent = m; if (desfazer){ const b = document.createElement('button'); b.textContent = 'Desfazer'; b.onclick = () => { t.hidden = true; desfazer(); }; t.appendChild(b); } t.hidden = false; clearTimeout(toastT); toastT = setTimeout(()=>{ t.hidden = true; }, ms||3200); }
+function vibrar(){ try { navigator.vibrate && navigator.vibrate(12); } catch(e){} }
 async function copiar(txt){ try { await navigator.clipboard.writeText(txt); return true; } catch(e){ return false; } }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
@@ -629,10 +648,12 @@ function vidro(ctx, x, y, w, h, r, dark){
   ctx.restore();
   return dark ? '#F7F6F2' : '#141414';
 }
-function cabecalhoVidro(ctx, x, y, cor){ // nome pequeno dentro do vidro
-  ctx.fillStyle = AM; ctx.beginPath(); ctx.arc(x + 9, y - 9, 9, 0, 7); ctx.fill();
-  ctx.fillStyle = cor; ctx.globalAlpha = .75; ctx.font = '600 26px '+F_SANS; if ('letterSpacing' in ctx) ctx.letterSpacing = '2px';
-  ctx.fillText((cfg.nome || '').toUpperCase(), x + 30, y); if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'; ctx.globalAlpha = 1;
+function cabecalhoVidro(ctx, x, y, cor){ // foto e nome pequenos
+  const av = imagem(cfg.avatar); let dx = 30;
+  if (av){ ctx.save(); ctx.beginPath(); ctx.arc(x + 20, y - 9, 20, 0, 7); ctx.clip(); const r = Math.max(40/av.width, 40/av.height); ctx.drawImage(av, x + 20 - av.width*r/2, y - 9 - av.height*r/2, av.width*r, av.height*r); ctx.restore(); ctx.strokeStyle = AM; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x + 20, y - 9, 21, 0, 7); ctx.stroke(); dx = 54; }
+  else { ctx.fillStyle = AM; ctx.beginPath(); ctx.arc(x + 9, y - 9, 9, 0, 7); ctx.fill(); }
+  ctx.fillStyle = cor; ctx.globalAlpha = .8; ctx.font = '600 26px '+F_SANS; if ('letterSpacing' in ctx) ctx.letterSpacing = '2px';
+  ctx.fillText((cfg.nome || '').toUpperCase(), x + dx, y); if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'; ctx.globalAlpha = 1;
 }
 function areaTexto(st){ return st.sticker && st.sticker.tipo !== 'nenhum' ? [TOPO+40, ADES[0]-50] : [TOPO+40, BASE]; }
 function fundoNativo(ctx, cor){
@@ -870,10 +891,10 @@ function renderHoje(){
       <h3>${rec.status === 'postado' ? 'Postado hoje' : (pronta ? 'Poste esta. Está pronta.' : 'A de hoje (confira antes)')}</h3>
       <div><b style="font:500 22px/1.2 var(--f-display)">${esc(rec.titulo)}</b><p class="dica">“${esc(tema)}” · ${rec.stories.length} stories</p></div>
       <div class="mini-fita">${rec.stories.map(x => '<img alt="" src="'+miniatura(x, rec.data)+'">').join('')}</div>
-      <div class="linha">${rec.status === 'postado' ? '<button data-ver="'+rec.id+'">Ver</button>' : '<button class="pri" data-ja="'+rec.id+'">'+(MODO === 'fotos' ? 'Enviar ao Instagram' : 'Baixar e postar')+'</button><button data-ver="'+rec.id+'">Ver antes</button>'}</div>
+      <div class="linha">${rec.status === 'postado' ? '<button data-ver="'+rec.id+'">Ver</button>' : '<button class="pri" data-ja="'+rec.id+'">'+(PODE_POSTAR ? 'Postar no Instagram' : 'Baixar e postar')+'</button><button data-ver="'+rec.id+'">Ver antes</button>'}</div>
     </div>` + (outras.length ? `<details class="mais"><summary>Outras opções de hoje (${outras.length})</summary><div class="lista-seq">${outras.map(linhaSeq).join('')}</div></details>` : '') + blocoDireto(hoje());
     c.querySelectorAll('[data-ver]').forEach(b => b.onclick = () => { setModo(false); abrirSeq(b.dataset.ver); });
-    c.querySelectorAll('[data-ja]').forEach(b => b.onclick = () => { setModo(false); abrirSeq(b.dataset.ja); const lst = atual.stories.filter(exportavel); if (MODO === 'fotos') enviar(lst); else baixarAzul(lst); });
+    c.querySelectorAll('[data-ja]').forEach(b => b.onclick = () => { setModo(false); abrirSeq(b.dataset.ja); const lst = atual.stories.filter(exportavel); if (PODE_POSTAR) enviar(lst); else baixarAzul(lst); });
     ligarLista(c); ligarDireto(c, hoje(), renderHoje);
   } else {
     const prox = seqs.filter(s => s.data > hoje() && s.status !== 'postado').sort((a,b) => a.data < b.data ? -1 : 1)[0];
@@ -927,10 +948,93 @@ function renderFita(){
   f.querySelectorAll('.mini[data-i]').forEach(b => b.onclick = () => { idx = +b.dataset.i; renderStories(); });
   $('#btNovoStory').onclick = () => { atual.stories.push(novoStory({ visual: atual.stories[idx] ? atual.stories[idx].visual : 'nativo', fundo: atual.stories[idx] ? atual.stories[idx].fundo : '' })); idx = atual.stories.length-1; salvarSeqs(); renderStories(); $('#edTexto').focus(); };
 }
-let modoEd = false;
-function setModo(ed){ modoEd = ed; $('#modoVer').setAttribute('aria-pressed', !ed); $('#modoEditar').setAttribute('aria-pressed', ed); $('#editor').hidden = !ed; $('#conferencia').hidden = !ed; renderAcao(); }
-$('#modoVer').onclick = () => setModo(false);
-$('#modoEditar').onclick = () => setModo(true);
+let modo = 'roteiro';
+function setModo(m){ if (m === true) m = 'ajustar'; if (m === false) m = 'roteiro'; modo = m;
+  ['roteiro','previa','ajustar'].forEach(k => $('#modo' + k[0].toUpperCase() + k.slice(1)).setAttribute('aria-pressed', k === m));
+  if (atual) renderStories(); else renderAcao(); }
+$('#modoRoteiro').onclick = () => setModo('roteiro');
+$('#modoPrevia').onclick = () => setModo('previa');
+$('#modoAjustar').onclick = () => setModo('ajustar');
+const NOMES_AD = { caixinha:'Caixinha de perguntas', enquete:'Enquete', quiz:'Quiz', slider:'Slider de emoji', link:'Link' };
+const TIPO_NOME = { texto:'Imagem com texto', foto:'Foto sua', resposta:'Resposta de caixinha', case:'Resultado com print', gravar:'Gravar no Instagram' };
+const VIS_NOME = { imagem:'foto com texto por cima', vidro:'texto em vidro', nativo:'natural', manchete:'manchete', papel:'papel', nota:'nota', conversa:'conversa', anuncio:'título grande', ritual:'capa da caixinha', capa:'capa de destaque' };
+function aceitaFoto(x){ return x.tipo === 'foto' || x.tipo === 'case' || (x.tipo === 'texto' && (x.visual === 'imagem' || x.visual === 'vidro')); }
+function buscaDe(x){ if (x.imgBusca) return x.imgBusca; return (x.texto || '').replace(/\*\*/g,'').split(/\s+/).filter(w => w.length > 4).slice(0, 3).join(' ') || 'minimal'; }
+function linkFoto(site, q){ q = encodeURIComponent(q); return site === 'unsplash' ? 'https://unsplash.com/s/photos/' + q + '?orientation=portrait' : site === 'pinterest' ? 'https://br.pinterest.com/search/pins/?q=' + q : 'https://www.google.com/search?tbm=isch&tbs=iar:t&q=' + q; }
+let fotoAlvo = null;
+function marcarAlvo(id){ fotoAlvo = id; try { sessionStorage.setItem('dan_stories_alvo', id); } catch(e){} }
+function autoAltura(t){ t.style.height = 'auto'; t.style.height = (t.scrollHeight + 2) + 'px'; }
+function renderRoteiro(){
+  const r = $('#roteiro'); const n = atual.stories.length;
+  r.innerHTML = `<p class="dica">Edite o texto direto aqui. <b>**palavra**</b> vira marca-texto amarelo. Toque na imagem para ver grande.</p>` + atual.stories.map((x, i) => {
+    const pronto = exportavel(x);
+    const det = [x.tipo === 'texto' ? VIS_NOME[x.visual][0].toUpperCase() + VIS_NOME[x.visual].slice(1) : TIPO_NOME[x.tipo], x.sticker.tipo !== 'nenhum' ? 'adesivo ' + NOMES_AD[x.sticker.tipo].toLowerCase() : ''].filter(Boolean).join(' · ');
+    let campos = '';
+    if (x.tipo === 'resposta') campos += `<input data-campo="pergunta" data-i="${i}" value="${esc(x.pergunta)}" placeholder="Pergunta que chegou" aria-label="Pergunta do story ${i+1}">`;
+    if (x.tipo === 'gravar') campos += `<textarea data-campo="roteiro" data-i="${i}" rows="3" aria-label="Roteiro do story ${i+1}">${esc(x.roteiro || x.texto)}</textarea>`;
+    else campos += `<textarea data-campo="texto" data-i="${i}" rows="3" aria-label="Texto do story ${i+1}" placeholder="Escreva o texto">${esc(x.texto)}</textarea>`;
+    const info = [];
+    if (aceitaFoto(x) && !fotos[x.id]) info.push(x.tipo === 'case' ? 'Falta o print.' : x.tipo === 'foto' ? 'Falta a sua foto.' : 'Sem foto: vai com fundo escuro com luz. Para pôr foto, escolha abaixo.');
+    if (x.sticker.tipo !== 'nenhum') info.push('No Instagram: adesivo <b>' + NOMES_AD[x.sticker.tipo] + '</b>' + (x.sticker.texto ? ' “' + esc(x.sticker.texto) + '”' : '') + (x.sticker.opcoes.length ? ' (' + x.sticker.opcoes.map(esc).join(' / ') + ')' : '') + ' no espaço tracejado.');
+    if (x.tipo === 'gravar') info.push('Grave no Instagram' + (x.mostrar ? ' mostrando ' + esc(x.mostrar) : '') + '. Use o teleprompter.');
+    const chips = [];
+    if (aceitaFoto(x)){ const q = buscaDe(x);
+      chips.push(`<a class="btn" data-site="unsplash" data-i="${i}" href="${linkFoto('unsplash', q)}" target="_blank" rel="noopener">Unsplash</a>`);
+      chips.push(`<a class="btn" data-site="pinterest" data-i="${i}" href="${linkFoto('pinterest', q)}" target="_blank" rel="noopener">Pinterest</a>`);
+      chips.push(`<a class="btn" data-site="google" data-i="${i}" href="${linkFoto('google', q)}" target="_blank" rel="noopener">Google</a>`);
+      chips.push(`<button data-acao="colar" data-i="${i}">Colar foto</button>`);
+      chips.push(`<label class="btn" style="flex-direction:row;font-size:13px;min-height:36px;padding:7px 11px;color:var(--fg)">Galeria<input type="file" accept="image/*" hidden data-acao="galeria" data-i="${i}"></label>`);
+      if (fotos[x.id]) chips.push(`<button data-acao="semfoto" data-i="${i}">Tirar foto</button>`);
+    }
+    if (x.tipo === 'gravar') chips.push(`<button data-acao="tele" data-i="${i}">Teleprompter</button>`);
+    if (x.sticker.tipo !== 'nenhum' && x.sticker.texto) chips.push(`<button data-acao="copiar" data-i="${i}">Copiar adesivo</button>`);
+    if (pronto) chips.push(`<button data-acao="um" data-i="${i}">${PODE_POSTAR ? 'Postar este' : 'Baixar este'}</button>`);
+    chips.push(`<button data-acao="apagar" data-i="${i}" aria-label="Apagar story ${i+1}">Apagar</button>`);
+    return `<div class="cena${i === idx ? ' sel' : ''}" data-cena="${i}">
+      <button class="ver" data-acao="ver" data-i="${i}" aria-label="Ver o story ${i+1} grande"><img alt="" src="${miniatura(x, atual.data)}"></button>
+      <div class="lado"><span class="num">${i+1} de ${n} · ${det}${pronto ? '' : ' · falta algo'}</span>${campos}
+      ${info.length ? '<div class="chip-info">' + info.join('<br>') + '</div>' : ''}<div class="chips">${chips.join('')}</div></div></div>`;
+  }).join('') + `<button data-acao="novo">+ Novo story</button>`;
+  r.querySelectorAll('textarea').forEach(autoAltura);
+  r.querySelectorAll('[data-campo]').forEach(el => el.oninput = () => { const x = atual.stories[+el.dataset.i]; x[el.dataset.campo] = el.value; if (el.tagName === 'TEXTAREA') autoAltura(el); salvarSeqs(); clearTimeout(el._t); el._t = setTimeout(() => { const img = r.querySelector('[data-cena="' + el.dataset.i + '"] .ver img'); if (img) img.src = miniatura(x, atual.data); renderConferencia(); }, 500); });
+  r.querySelectorAll('a[data-site]').forEach(a => a.onclick = () => { marcarAlvo(atual.stories[+a.dataset.i].id); idx = +a.dataset.i; toast('Copie a imagem lá (segure a foto → Copiar imagem) e volte aqui.', 6000); });
+  r.querySelectorAll('[data-acao]').forEach(el => {
+    const i = +el.dataset.i, x = atual.stories[i], ac = el.dataset.acao;
+    if (ac === 'galeria'){ el.onchange = async e => { const f = e.target.files[0]; if (!f) return; await aplicarFoto(x, f); }; return; }
+    el.onclick = async () => {
+      vibrar();
+      if (ac === 'ver'){ idx = i; setModo('previa'); }
+      else if (ac === 'colar'){ marcarAlvo(x.id); idx = i; await colarFoto(true); }
+      else if (ac === 'semfoto'){ delete fotos[x.id]; x.credito = ''; x.fotoUrl = ''; salvarFotos(); salvarSeqs(); renderRoteiro(); }
+      else if (ac === 'tele'){ idx = i; abrirTele(); }
+      else if (ac === 'copiar'){ toast(await copiar(x.sticker.texto) ? 'Copiado. Cole no adesivo do Instagram.' : 'Não deu para copiar.'); }
+      else if (ac === 'um'){ PODE_POSTAR ? enviar([x]) : baixarAzul([x]); }
+      else if (ac === 'apagar'){ apagarStory(i); }
+      else if (ac === 'novo'){ atual.stories.push(novoStory({ visual: 'imagem' })); idx = atual.stories.length-1; salvarSeqs(); renderStories(); const t = r.querySelector('[data-cena="' + idx + '"] textarea'); if (t) t.focus(); }
+    };
+  });
+}
+async function aplicarFoto(x, blob){ fotos[x.id] = await lerFoto(blob, 1600); x.credito = ''; x.fotoUrl = ''; salvarFotos(); salvarSeqs(); fotoAlvo = null; try { sessionStorage.removeItem('dan_stories_alvo'); } catch(e){} $('#colarFoto').hidden = true; vibrar(); toast('Foto colocada.'); renderStories(); }
+async function colarFoto(pedido){
+  const id = fotoAlvo || (() => { try { return sessionStorage.getItem('dan_stories_alvo'); } catch(e){ return null; } })(); if (!id || !atual) return;
+  const x = atual.stories.find(s => s.id === id); if (!x) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.read){
+      const itens = await navigator.clipboard.read();
+      for (const it of itens){ const t = it.types.find(t => t.startsWith('image/')); if (t){ await aplicarFoto(x, await it.getType(t)); return; } }
+    }
+  } catch(e){}
+  if (pedido){ const c = $('#colarFoto'); c.hidden = false; c.scrollIntoView({ block:'center' }); c.focus(); toast('Toque e segure no quadro tracejado e escolha Colar.', 5000); }
+}
+document.addEventListener('paste', async e => {
+  const id = fotoAlvo || (() => { try { return sessionStorage.getItem('dan_stories_alvo'); } catch(e){ return null; } })(); if (!id || !atual) return;
+  const x = atual.stories.find(s => s.id === id); if (!x) return;
+  const it = [...(e.clipboardData ? e.clipboardData.items : [])].find(i => i.type.startsWith('image/'));
+  if (it){ e.preventDefault(); await aplicarFoto(x, it.getAsFile()); }
+  else if (e.target && e.target.id === 'colarFoto'){ e.preventDefault(); toast('O que foi copiado não é uma imagem. No site, segure a foto e escolha Copiar imagem.', 5000); }
+});
+$('#colarFoto').addEventListener('input', e => { e.target.innerHTML = 'Toque e segure aqui e escolha <b>Colar</b> para pôr a foto copiada'; });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && (fotoAlvo || (() => { try { return sessionStorage.getItem('dan_stories_alvo'); } catch(e){ return null; } })())) colarFoto(false); });
 function renderPasso(){
   const st = atual.stories[idx], n = atual.stories.length; const p = $('#passo'); const pr = [];
   const sk = st.sticker; const nomes = { caixinha:'Caixinha de perguntas', enquete:'Enquete', quiz:'Quiz', slider:'Slider de emoji', link:'Link' };
@@ -940,14 +1044,14 @@ function renderPasso(){
   if (st.tipo === 'gravar'){ pr.push('Abra o teleprompter e deixe o texto rolando.'); pr.push('No Instagram, abra a câmera do story e grave falando.'); if (st.mostrar) pr.push('Mostre: ' + esc(st.mostrar) + '.'); }
   else if (exportavel(st)){ pr.push('Baixe (ou já baixou com os outros) e escolha a imagem no story.'); }
   else pr.push('Toque em <b>Editar</b> e ' + (st.tipo === 'case' ? 'escolha o print.' : st.tipo === 'foto' ? 'escolha uma foto sua.' : 'escreva o texto.'));
-  if (precisaFoto(st)) pr.unshift(MODO === 'fotos' ? 'A foto de fundo está sendo buscada (' + esc(st.imgBusca) + ').' : 'A foto de fundo entra sozinha no <b>Motor vermelho</b>. Aqui aparece o fundo com luz; em Editar você pode pôr uma foto sua.');
+  if (aceitaFoto(st) && !fotos[st.id]) pr.unshift('Sem foto de fundo. No <b>Roteiro</b> você escolhe uma no Unsplash, Pinterest ou Google e cola.');
   if (sk.tipo !== 'nenhum') pr.push('No Instagram, coloque o adesivo <b>' + nomes[sk.tipo] + '</b> no espaço tracejado' + (sk.texto ? ' com: “' + esc(sk.texto) + '”' : '') + (sk.opcoes.length ? ' (' + sk.opcoes.map(esc).join(' / ') + ')' : '') + '.');
   p.innerHTML = `<span class="num">Story ${idx+1} de ${n}</span><span class="oque">${oque}</span><ol>${pr.map(x => '<li>'+x+'</li>').join('')}</ol>
-    <div class="linha">${st.tipo === 'gravar' ? '<button class="pri peq" id="btTele">Abrir teleprompter</button>' : ''}${sk.tipo !== 'nenhum' && sk.texto ? '<button class="peq" id="btCopiarAdesivo">Copiar texto do adesivo</button>' : ''}${MODO === 'fotos' && fotos[st.id] && st.fotoUrl ? '<button class="peq" id="btOutraFoto">Outra foto</button>' : ''}${exportavel(st) ? '<button class="peq" id="btBaixarEste">' + (MODO === 'fotos' ? 'Enviar só este' : 'Baixar só este') + '</button>' : ''}</div>`;
+    <div class="linha">${st.tipo === 'gravar' ? '<button class="pri peq" id="btTele">Abrir teleprompter</button>' : ''}${sk.tipo !== 'nenhum' && sk.texto ? '<button class="peq" id="btCopiarAdesivo">Copiar texto do adesivo</button>' : ''}${exportavel(st) ? '<button class="peq" id="btBaixarEste">' + (PODE_POSTAR ? 'Postar só este' : 'Baixar só este') + '</button>' : ''}</div>`;
   const t = $('#btTele'); if (t) t.onclick = abrirTele;
   const of = $('#btOutraFoto'); if (of) of.onclick = () => outraFoto(st);
   const c = $('#btCopiarAdesivo'); if (c) c.onclick = async () => { toast(await copiar(st.sticker.texto) ? 'Copiado. Cole no adesivo do Instagram.' : 'Não deu para copiar.'); };
-  const b = $('#btBaixarEste'); if (b) b.onclick = () => MODO === 'fotos' ? enviar([st]) : baixarAzul([st]);
+  const b = $('#btBaixarEste'); if (b) b.onclick = () => PODE_POSTAR ? enviar([st]) : baixarAzul([st]);
 }
 (function(){ let x0 = null; const pal = $('#palco');
   pal.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive:true });
@@ -988,8 +1092,7 @@ function renderStories(){
   $('#btPostado').textContent = atual.status === 'postado' ? 'Desmarcar postada' : 'Marcar como postada';
   $('#confirmaApagar').hidden = true;
   renderConferencia(); renderPasso();
-  if (MODO === 'escrita'){ const temF = atual.stories.some(precisaFoto); $('#avisoFotos').hidden = !temF; $('#btVermelho2').href = linkPronto; }
-  if (MODO === 'fotos' && !tentouFotos.has(atual.id) && atual.stories.some(precisaFoto)){ tentouFotos.add(atual.id); setTimeout(() => autoFotos(atual, true), 300); } $('#editor').hidden = !modoEd; $('#conferencia').hidden = !modoEd;
+  renderConferencia(); renderPasso(); $('#editor').hidden = modo !== 'ajustar'; $('#passo').hidden = modo !== 'previa'; document.querySelector('#comSeq .duas').hidden = modo === 'roteiro'; $('#roteiro').hidden = modo !== 'roteiro'; if (modo === 'roteiro') renderRoteiro();
   redesenhar(); renderAcao();
 }
 let tMini;
@@ -1010,7 +1113,8 @@ $('#btProx').onclick = () => { if (idx<atual.stories.length-1){ idx++; renderSto
 $('#btSubir').onclick = () => { if (idx>0){ const a = atual.stories; [a[idx-1],a[idx]]=[a[idx],a[idx-1]]; idx--; mudou(); renderStories(); } };
 $('#btDescer').onclick = () => { const a = atual.stories; if (idx<a.length-1){ [a[idx+1],a[idx]]=[a[idx],a[idx+1]]; idx++; mudou(); renderStories(); } };
 $('#btDuplicar').onclick = () => { const c = JSON.parse(JSON.stringify(st())); c.id = uid(); atual.stories.splice(idx+1,0,c); idx++; mudou(); renderStories(); };
-$('#btApagar').onclick = () => { if (atual.stories.length === 1){ toast('A sequência precisa de pelo menos um story.'); return; } delete fotos[st().id]; atual.stories.splice(idx,1); if (idx>0) idx--; salvarFotos(); mudou(); renderStories(); };
+function apagarStory(i){ if (atual.stories.length === 1){ toast('A sequência precisa de pelo menos um story.'); return; } const [x] = atual.stories.splice(i,1); const seq = atual; if (idx >= atual.stories.length) idx = atual.stories.length-1; salvarSeqs(); renderStories(); toast('Story apagado.', 5000, () => { seq.stories.splice(i, 0, x); salvarSeqs(); renderStories(); }); }
+$('#btApagar').onclick = () => apagarStory(idx);
 $('#sqTitulo').oninput = e => { atual.titulo = e.target.value; salvarSeqs(); $('#seqTitulo').textContent = atual.titulo; };
 $('#sqData').onchange = e => { if (e.target.value){ atual.data = e.target.value; salvarSeqs(); renderStories(); } };
 $('#sqEstilo').onchange = e => { aplicarEstilo(atual, e.target.value); mudou(); renderStories(); };
@@ -1144,8 +1248,8 @@ async function descomprimir(c){ const ds = new DecompressionStream('deflate-raw'
 let linkPronto = LINK_VERMELHO, tLink;
 function pacote(){ const de = hoje(); return seqs.filter(s => s.data >= de || (atual && s.id === atual.id)).map(s => ({ ...s, stories: s.stories.map(x => ({ ...x })) })); }
 function agendarLink(){ if (MODO !== 'escrita') return; clearTimeout(tLink); tLink = setTimeout(async () => { try { const p = pacote(); if (!p.length){ linkPronto = LINK_VERMELHO; } else linkPronto = LINK_VERMELHO + '?c=' + await comprimir(JSON.stringify({ v:1, sequencias:p })); const a = $('#btVermelho'); if (a) a.href = linkPronto; } catch(e){} }, 400); }
-$('#btVermelho2').onclick = () => { copiar(linkPronto); toast('Link copiado. Se abrir aqui dentro, use o ícone vermelho do Motor Stories e toque em Colar do Motor azul.', 5000); };
-$('#btVermelho').onclick = () => { copiar(linkPronto); toast('Link copiado. Se abrir aqui dentro, use o ícone vermelho do Motor Stories e toque em Colar do Motor azul.', 5000); };
+$('#btVermelho2').onclick = () => { copiar(linkPronto); toast('Link copiado. Se abrir aqui dentro, use o app Stories instalado e toque em Colar sequência do Claude.', 5000); };
+$('#btVermelho').onclick = () => { copiar(linkPronto); toast('Link copiado. Se abrir aqui dentro, use o app Stories instalado e toque em Colar sequência do Claude.', 5000); };
 async function importarTexto(txt, silencioso){
   txt = (txt||'').trim(); if (!txt) return false;
   let dados = null;
@@ -1153,7 +1257,7 @@ async function importarTexto(txt, silencioso){
   try {
     if (m){ if (ler(K.ult,'') === m[1] && silencioso) return false; dados = JSON.parse(await descomprimir(m[1])); gravar(K.ult, m[1]); }
     else { const j = txt.slice(txt.indexOf('{'), txt.lastIndexOf('}')+1); dados = JSON.parse(j); }
-  } catch(e){ if (!silencioso) toast('Não reconheci esse conteúdo. Cole o link do Motor azul ou o JSON.'); return false; }
+  } catch(e){ if (!silencioso) toast('Não reconheci esse conteúdo. Cole o link da sequência ou o JSON.'); return false; }
   const lista = Array.isArray(dados) ? dados : dados.sequencias ? dados.sequencias : dados.stories ? [dados] : [];
   if (!lista.length){ if (!silencioso) toast('Não achei sequências aí.'); return false; }
   let novas = 0, ult = null;
@@ -1166,19 +1270,19 @@ async function importarTexto(txt, silencioso){
 async function lerAreaTransferencia(pedir){
   try {
     if (!pedir){ const p = await navigator.permissions.query({ name:'clipboard-read' }); if (p.state !== 'granted') return; }
-    const t = await navigator.clipboard.readText(); if (t && /c=|"sequencias"|"stories"/.test(t)) await importarTexto(t, !pedir); else if (pedir) toast('A área de transferência não tem sequência do Motor azul.');
+    const t = await navigator.clipboard.readText(); if (t && /c=|"sequencias"|"stories"/.test(t)) await importarTexto(t, !pedir); else if (pedir) toast('A área de transferência não tem sequência do Claude.');
   } catch(e){ if (pedir){ $('#jsonTxt').hidden = false; $('#btImportar').hidden = false; $('#jsonTxt').focus(); toast('Cole o link no campo e toque em Importar.'); } }
 }
 
 /* ========== ações fixas ========== */
 function renderAcao(){
   const a = $('#acao'); a.innerHTML = '';
-  if (abaAtual === 'stories' && atual && !modoEd){
+  if (abaAtual === 'stories' && atual && modo !== 'ajustar'){
     const n = atual.stories.filter(exportavel).length;
     if (atual.status === 'postado'){ a.innerHTML = '<button disabled>Postada ✓</button>'; return; }
-    a.innerHTML = `<button class="pri" id="btPrincipal">${n ? (MODO === 'fotos' ? 'Enviar ao Instagram ('+n+')' : 'Baixar '+n+' '+(n===1?'story':'stories')) : 'Nenhuma imagem pronta'}</button>`;
+    a.innerHTML = `<button class="pri" id="btPrincipal">${n ? (PODE_POSTAR ? 'Postar no Instagram ('+n+')' : 'Baixar '+n+' '+(n===1?'story':'stories')) : 'Nenhuma imagem pronta'}</button>`;
     $('#btPrincipal').disabled = !n;
-    $('#btPrincipal').onclick = () => MODO === 'fotos' ? enviar(atual.stories.filter(exportavel)) : baixarAzul(atual.stories.filter(exportavel));
+    $('#btPrincipal').onclick = () => { vibrar(); PODE_POSTAR ? enviar(atual.stories.filter(exportavel)) : baixarAzul(atual.stories.filter(exportavel)); };
   } else if (abaAtual === 'hoje' && porDia(hoje()).length && !porDia(hoje()).some(s => s.status === 'postado') && !diretos.includes(hoje())){
     const s0 = [...porDia(hoje())].sort((x, y) => (x.gatilho === 'alta') - (y.gatilho === 'alta'))[0];
     a.innerHTML = `<button class="pri" id="btAbrirHoje">Abrir o story de hoje</button>`;
@@ -1203,7 +1307,7 @@ async function enviar(lista){
 }
 function baixarLocal(fs){ fs.forEach((f,i) => setTimeout(() => { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }, i*400)); toast('Imagens salvas na pasta de downloads.'); }
 function perguntarPostado(){
-  const a = $('#acao'); a.innerHTML = '<div class="linha" style="justify-content:center"><button class="pri" id="simPost">Postei</button><button id="naoPost">Ainda não</button></div>';
+  const a = $('#acao'); a.innerHTML = '<div class="linha" style="justify-content:center">' + (PODE_POSTAR ? '' : '<a class="btn" href="https://www.instagram.com/" target="_blank" rel="noopener">Abrir o Instagram ↗</a>') + '<button class="pri" id="simPost">Postei</button><button id="naoPost">Ainda não</button></div>';
   $('#simPost').onclick = () => { atual.status = 'postado'; salvarSeqs(); renderStories(); if (MODO === 'escrita') agendarLink(); toast(ofensiva()+' '+(ofensiva()===1?'dia seguido':'dias seguidos')+'. Amanhã tem mais.'); };
   $('#naoPost').onclick = renderAcao;
 }
@@ -1384,7 +1488,7 @@ $('#btParar').onclick = () => { ctl && ctl.abort(); };
 /* ========== manual e importação ========== */
 function emBranco(data){
   const s = normalizar({ data: data || hoje(), titulo: 'Stories de ' + DIAS[deIso(data||hoje()).getDay()], gatilho:'manual', stories:[ { tipo:'texto', visual:'nativo', texto:'' }, { tipo:'texto', visual:'nativo', texto:'', sticker:{ tipo:'caixinha', texto:'' } } ] });
-  seqs.push(s); salvarSeqs(); setModo(true); abrirSeq(s.id); setTimeout(() => $('#edTexto').focus(), 50);
+  seqs.push(s); salvarSeqs(); setModo('roteiro'); abrirSeq(s.id); setTimeout(() => { const t = document.querySelector('#roteiro textarea'); if (t) t.focus(); }, 50);
 }
 $('#btEmBranco').onclick = () => emBranco($('#optData').value || hoje());
 $('#btColarJson').onclick = () => { $('#jsonTxt').hidden = false; $('#btImportar').hidden = false; $('#jsonTxt').focus(); };
@@ -1407,6 +1511,9 @@ $('#btCapasDestaque').onclick = () => {
 };
 
 /* ========== ajustes ========== */
+function renderAvatarTopo(){ const b = $('#btAvatarTopo'); b.innerHTML = cfg.avatar ? '<img alt="" src="' + cfg.avatar + '">' : esc((cfg.nome || 'D')[0].toUpperCase()); }
+$('#btAvatarTopo').onclick = () => ir('ajustes');
+renderAvatarTopo();
 function renderAjustes(){
   $('#cfgNome').value = cfg.nome; $('#cfgArroba').value = cfg.arroba; $('#cfgRitualTexto').value = cfg.ritualTexto || '';
   const c = $('#coresRitual'); c.innerHTML = CORES_RITUAL.map(x => `<button data-c="${x}" aria-pressed="${x===cfg.ritualCor}" aria-label="Cor da capa ${x}" style="background:${x}"></button>`).join('');
@@ -1417,7 +1524,7 @@ $('#cfgRitualFoto').onchange = async e => { const f = e.target.files[0]; if (!f)
 $('#btTirarRitual').onclick = () => { cfg.ritualFoto = ''; gravar(K.cfg, cfg); toast('Capa sem foto.'); };
 $('#cfgNome').oninput = e => { cfg.nome = e.target.value; gravar(K.cfg, cfg); };
 $('#cfgArroba').oninput = e => { let v = e.target.value.trim(); cfg.arroba = v && v[0] !== '@' ? '@'+v : v; gravar(K.cfg, cfg); };
-$('#cfgAvatar').onchange = async e => { const f = e.target.files[0]; if (!f) return; cfg.avatar = await lerFoto(f, 240); gravar(K.cfg, cfg); toast('Foto do perfil salva.'); };
+$('#cfgAvatar').onchange = async e => { const f = e.target.files[0]; if (!f) return; cfg.avatar = await lerFoto(f, 240); gravar(K.cfg, cfg); renderAvatarTopo(); toast('Foto do perfil salva. Ela aparece nos stories.'); };
 $('#btExportar').onclick = async () => { toast(await copiar(JSON.stringify({ sequencias: seqs })) ? 'Backup copiado. Cole num lugar seguro.' : 'Não deu para copiar.'); };
 $('#btLimparPostadas').onclick = () => { const lim = soma(hoje(), -30); const antes = seqs.length; seqs = seqs.filter(s => !(s.status === 'postado' && s.data < lim)); salvarSeqs(); toast((antes - seqs.length)+' sequências apagadas.'); };
 

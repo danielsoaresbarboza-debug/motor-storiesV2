@@ -1,12 +1,12 @@
 {
   "id": "./stories-postar",
-  "name": "Motor Stories · Postar",
+  "name": "Motor Stories",
   "short_name": "Stories",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#1E0C0A",
-  "theme_color": "#C2362B",
+  "background_color": "#0F0F11",
+  "theme_color": "#151517",
   "icons": [
     {
       "src": "icone-192.png",
