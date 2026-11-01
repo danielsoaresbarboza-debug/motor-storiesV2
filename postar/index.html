@@ -107,6 +107,13 @@ nav.abas button{border:0;background:transparent;flex-direction:column;gap:3px;pa
 nav.abas button svg{width:22px;height:22px}
 nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
 .digitando .base{display:none}
+.rotina{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:14px;background:var(--fg);color:var(--bg)}
+.rotina small{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;font-weight:700}
+.rotina b{font:400 30px/1.05 var(--f-display)}
+.rotina p{font-size:14px;opacity:.85}
+.habito{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.conf li{margin-bottom:4px}
+.conf .okc{color:var(--ok);font-weight:700}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:12px 16px;border-radius:14px;font-weight:600;font-size:14px;z-index:60;max-width:calc(100% - 32px);box-shadow:0 10px 30px rgba(0,0,0,.25)}
 
 /* Teleprompter */
@@ -135,6 +142,7 @@ nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
         <span class="muted" id="hojeData"></span>
       </div>
       <div class="semana" id="semanaHoje"></div>
+      <p class="habito" id="habito"></p>
     </div>
     <div class="cartao" id="hojeCartao"></div>
   </section>
@@ -145,10 +153,14 @@ nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
       <h2>O que vira story hoje?</h2>
       <div class="seg" id="entradaSeg" role="group" aria-label="De onde vem a sequência">
         <button data-e="dia" aria-pressed="true">Contar o dia</button>
-        <button data-e="caixinha" aria-pressed="false">Respostas da caixinha</button>
+        <button data-e="caixinha" aria-pressed="false">Caixinha</button>
+        <button data-e="abertura" aria-pressed="false">Abertura (segunda)</button>
+        <button data-e="bastidor" aria-pressed="false">Bastidor (sábado)</button>
+        <button data-e="leve" aria-pressed="false">Domingo leve</button>
         <button data-e="carrossel" aria-pressed="false">Do carrossel</button>
         <button data-e="opiniao" aria-pressed="false">Sugere você</button>
         <button data-e="semana" aria-pressed="false">Semana inteira</button>
+        <button data-e="destaque" aria-pressed="false">Destaque Comece aqui</button>
       </div>
       <p class="dica" id="entradaDica"></p>
       <label for="entradaTxt"><span id="entradaRotulo">O que aconteceu</span>
@@ -187,6 +199,12 @@ nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
         <button id="btEmBranco">Escrever eu mesmo</button>
         <button id="btColarJson">Colar JSON</button>
         <button class="so-fotos" id="btColarAzul">Colar do Motor azul</button>
+        <button id="btCaixinhaManual">Montar caixinha</button>
+      </div>
+      <div class="pilha" id="caixinhaManual" hidden>
+        <label for="perguntasManual">Perguntas que chegaram (uma por linha)<textarea id="perguntasManual" placeholder="Como começo a postar sem travar?&#10;Vale a pena usar IA no conteúdo?"></textarea></label>
+        <button class="pri" id="btCriarCaixinha">Criar um story por pergunta</button>
+        <p class="dica">Cada pergunta vira um story de resposta. No fim entra a capa fixa da caixinha de hoje.</p>
       </div>
       <textarea id="jsonTxt" hidden placeholder='Cole aqui o JSON da sequência ({"sequencias":[...]}) ou o link do Motor azul'></textarea>
       <button id="btImportar" hidden>Importar</button>
@@ -217,7 +235,8 @@ nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
               <button class="peq pri" id="btTele" hidden>Abrir teleprompter</button>
               <button class="peq" id="btCopiarAdesivo" hidden>Copiar pergunta do adesivo</button>
             </div>
-            <label for="edTexto">Texto do story <span class="dica" style="font-weight:400">— **palavra** vira marca-texto</span>
+            <label for="edPergunta" id="rotPergunta" hidden>Pergunta que chegou<input id="edPergunta"></label>
+            <label for="edTexto"><span id="rotTexto">Texto do story</span> <span class="dica" style="font-weight:400">— **palavra** vira marca-texto</span>
               <textarea id="edTexto" style="min-height:110px"></textarea>
             </label>
             <div class="pilha" id="blocoGravar" hidden>
@@ -226,10 +245,10 @@ nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
             </div>
             <div class="linha">
               <label style="flex:1 1 130px" for="edTipo">Tipo
-                <select id="edTipo"><option value="texto">Imagem com texto</option><option value="foto">Foto sua + texto</option><option value="gravar">Gravar no Instagram</option></select>
+                <select id="edTipo"><option value="texto">Imagem com texto</option><option value="resposta">Resposta de caixinha</option><option value="foto">Foto sua + texto</option><option value="case">Resultado com print</option><option value="gravar">Gravar no Instagram</option></select>
               </label>
               <label style="flex:1 1 130px" for="edVisual">Visual
-                <select id="edVisual"><option value="nativo">Natural (Instagram)</option><option value="manchete">Manchete</option><option value="papel">Papel</option><option value="nota">Nota</option><option value="conversa">Conversa</option></select>
+                <select id="edVisual"><option value="nativo">Natural (Instagram)</option><option value="manchete">Manchete</option><option value="papel">Papel</option><option value="nota">Nota</option><option value="conversa">Conversa</option><option value="anuncio">Título grande</option><option value="ritual">Capa da caixinha</option><option value="capa">Capa de destaque</option></select>
               </label>
             </div>
             <div class="pilha" id="blocoCor">
@@ -237,7 +256,7 @@ nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
               <div class="cores" id="cores"></div>
             </div>
             <div class="linha" id="blocoFoto" hidden>
-              <label class="btn" for="edFoto" style="flex-direction:row;color:var(--fg)">Escolher foto<input type="file" id="edFoto" accept="image/*" hidden></label>
+              <label class="btn" for="edFoto" style="flex-direction:row;color:var(--fg)"><span id="rotFoto">Escolher foto</span><input type="file" id="edFoto" accept="image/*" hidden></label>
               <button class="peq fant" id="btTirarFoto">Tirar foto</button>
             </div>
             <div class="linha">
@@ -255,6 +274,7 @@ nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
             </div>
           </div>
 
+          <div class="cartao conf" id="conferencia"></div>
           <div class="cartao">
             <h3>A sequência</h3>
             <div class="linha">
@@ -306,8 +326,8 @@ nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
     <div class="cartao" id="diaCartao"></div>
     <div class="cartao so-fotos">
       <h3>Lembrete diário</h3>
-      <p class="dica">Cria um evento que repete todo dia no seu calendário, com aviso na hora. Assim o dia não passa sem story.</p>
-      <div class="linha"><label style="flex:0 0 140px" for="horaLembrete">Horário<input type="time" id="horaLembrete" value="19:00"></label><button id="btLembrete">Adicionar ao calendário</button></div>
+      <p class="dica">Cria um evento que repete todo dia no seu calendário, com aviso na hora. O protocolo sugere a manhã: escrever cedo e postar tudo de uma vez.</p>
+      <div class="linha"><label style="flex:0 0 140px" for="horaLembrete">Horário<input type="time" id="horaLembrete" value="06:30"></label><button id="btLembrete">Adicionar ao calendário</button></div>
     </div>
   </section>
 
@@ -320,8 +340,20 @@ nav.abas button[aria-current="page"]{background:var(--fg);color:var(--bg)}
       <div class="linha"><label class="btn" for="cfgAvatar" style="flex-direction:row;color:var(--fg)">Foto do perfil<input type="file" id="cfgAvatar" accept="image/*" hidden></label><span class="dica">Aparece no visual Conversa.</span></div>
     </div>
     <div class="cartao">
+      <h3>Capa da caixinha</h3>
+      <p class="dica">Sempre a mesma capa, todo dia de caixinha. A repetição faz a caixinha virar sua marca.</p>
+      <label for="cfgRitualTexto">Frase da capa<input id="cfgRitualTexto"></label>
+      <div class="cores" id="coresRitual"></div>
+      <div class="linha"><label class="btn" for="cfgRitualFoto" style="flex-direction:row;color:var(--fg)">Foto de fundo<input type="file" id="cfgRitualFoto" accept="image/*" hidden></label><button class="peq fant" id="btTirarRitual">Sem foto</button></div>
+    </div>
+    <div class="cartao">
+      <h3>Destaques do perfil</h3>
+      <p class="dica">Gera as capas dos destaques (Comece aqui, Caixinha, Bastidor, Marcas) no mesmo visual. O texto do Comece aqui sai em Criar → Destaque Comece aqui.</p>
+      <button id="btCapasDestaque">Gerar capas dos destaques</button>
+    </div>
+    <div class="cartao">
       <h3>Como o Motor escreve</h3>
-      <p class="dica">Método do Ladeira (premissa em vez de promessa, escalada de atenção, super sincero, crônica) na voz de conversa do Elton Luiz, dentro do posicionamento v4. Nada de fato inventado: quando falta matéria-prima, ele pergunta antes de escrever. Toda sequência termina numa interação que puxa a do dia seguinte.</p>
+      <p class="dica">Rotina do Protocolo GÊNESE sem ofertas: segunda abertura, terça a sexta caixinha, sábado bastidor, domingo leve. Método do Ladeira (premissa em vez de promessa, escalada de atenção, super sincero) na voz de conversa do Elton Luiz, dentro do posicionamento v4. Nada de fato inventado: quando falta matéria-prima, ele pergunta antes de escrever. Toda sequência termina numa interação que puxa a do dia seguinte.</p>
     </div>
     <div class="cartao">
       <h3>Dados</h3>
@@ -369,7 +401,8 @@ const K = { seqs:'dan_stories_seqs_v1', cfg:'dan_stories_cfg_v1', aba:'dan_stori
 function ler(k, pad){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : pad; } catch(e){ return pad; } }
 function gravar(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
 let seqs = ler(K.seqs, []);
-let cfg = Object.assign({ nome:'Daniel Barboza', arroba:'', avatar:'', hora:'19:00' }, ler(K.cfg, {}));
+let cfg = Object.assign({ nome:'Daniel Barboza', arroba:'', avatar:'', hora:'06:30', ritualTexto:'Me pergunta sobre conteúdo, marca e ser lembrado.', ritualCor:'#0F0F10', ritualFoto:'' }, ler(K.cfg, {}));
+if (cfg.hora === '19:00') cfg.hora = '06:30';
 let fotos = ler(K.fotos, {}); // id do story -> dataURL (fica só neste aparelho)
 function salvarSeqs(){ gravar(K.seqs, seqs); agendarLink(); }
 function salvarFotos(){ if (!gravar(K.fotos, fotos)) toast('A foto ficou só até fechar o app: o espaço do aparelho para este app acabou.'); }
@@ -392,15 +425,25 @@ function toast(m, ms){ let t = $('.toast'); if (!t){ t = document.createElement(
 async function copiar(txt){ try { await navigator.clipboard.writeText(txt); return true; } catch(e){ return false; } }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+/* ========== rotina da semana (Protocolo GÊNESE, sem ofertas) ========== */
+const CAIXA = { nome:'Caixinha', e:'caixinha', meta:'5 a 10 stories', dica:'Responda de manhã as perguntas de ontem, uma por story. No fim, a capa de sempre abre a caixinha de hoje. Se não chegou nada, plante você mesmo 2 ou 3 perguntas.' };
+const ROTINA = {
+  1:{ nome:'Abertura da semana', e:'abertura', meta:'3 a 4 stories', dica:'Segunda é o dia que mais alcança. Uma ideia forte: o que você pensa, como faz diferente e o que a pessoa leva disso.' },
+  2:CAIXA, 3:CAIXA, 4:CAIXA, 5:CAIXA,
+  6:{ nome:'Bastidor da semana', e:'bastidor', meta:'3 a 6 stories', dica:'O que funcionou essa semana: um resultado, um print, um antes e depois, um erro que virou lição.' },
+  0:{ nome:'Domingo leve', e:'leve', meta:'1 a 3 stories', dica:'Sem tarefa. Uma frase, uma foto, um pensamento da semana.' }
+};
+const rotinaDe = d => ROTINA[deIso(d).getDay()];
+
 /* ========== modelo de dados ========== */
-function novoStory(p){ return Object.assign({ id:uid(), tipo:'texto', visual:'nativo', texto:'', roteiro:'', mostrar:'', fundo:'', sticker:{tipo:'nenhum', texto:'', opcoes:[]} }, p||{}); }
+function novoStory(p){ return Object.assign({ id:uid(), tipo:'texto', visual:'nativo', texto:'', pergunta:'', roteiro:'', mostrar:'', fundo:'', sticker:{tipo:'nenhum', texto:'', opcoes:[]} }, p||{}); }
 function normalizar(s){
   const seq = { id: s.id || uid(), data: s.data || hoje(), titulo: (s.titulo||'Sequência').slice(0,60), gatilho: s.gatilho||'', dispositivos: s.dispositivos||[], respostasModelo: s.respostasModelo||[], conferir: s.conferir||[], status: s.status==='postado'?'postado':'planejado', criado: s.criado || Date.now(), stories: [] };
   (s.stories||[]).forEach(st => {
-    const t = ['texto','foto','gravar'].includes(st.tipo) ? st.tipo : (st.tipo==='interacao' ? 'texto' : 'texto');
-    const v = ['nativo','manchete','papel','nota','conversa'].includes(st.visual) ? st.visual : (st.visual==='foto' ? 'nativo' : 'nativo');
+    const t = ['texto','foto','gravar','resposta','case'].includes(st.tipo) ? st.tipo : 'texto';
+    const v = ['nativo','manchete','papel','nota','conversa','anuncio','ritual','capa'].includes(st.visual) ? st.visual : 'nativo';
     const sk = st.sticker && typeof st.sticker === 'object' ? st.sticker : {};
-    seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'',
+    seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', pergunta: st.pergunta||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'',
       sticker: { tipo: ['caixinha','enquete','quiz','slider','link'].includes(sk.tipo) ? sk.tipo : 'nenhum', texto: sk.texto||'', opcoes: Array.isArray(sk.opcoes) ? sk.opcoes.slice(0,4) : [] } }));
   });
   if (!seq.stories.length) seq.stories.push(novoStory());
@@ -412,6 +455,7 @@ function abrirSeq(id, i){ atual = seqs.find(s => s.id === id) || null; idx = i||
 /* ========== desenho dos stories (1080 × 1920) ========== */
 const W = 1080, H = 1920, TOPO = 270, BASE = 1560, ADES = [1130, 1520];
 const AM = '#FFD400', PR = '#0F0F10', PA = '#F5F3EE';
+const CORES_RITUAL = ['#0F0F10','#FFD400','#1B2A6B','#C2362B','#2E5E4E','#F5F3EE'];
 const CORES_NATIVO = ['#0F0F10','#FFD400','#F5F3EE','#1B2A6B','#C2362B','#2E5E4E','grad'];
 const F_SANS = '"Instrument Sans", Roboto, "Segoe UI", Helvetica, Arial, sans-serif';
 const F_SERIF = '"Instrument Serif", Georgia, serif';
@@ -478,6 +522,16 @@ function escrever(ctx, L, x, y, o){ // o: alinhar, cor, marcaFundo, marcaCor, ca
   });
   return yy;
 }
+let graoPad = null;
+function grao(ctx, a){ // textura sutil de papel/filme
+  if (!graoPad){ const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const d = g.createImageData(256,256); for (let i=0;i<d.data.length;i+=4){ const v = Math.random()*255; d.data[i]=d.data[i+1]=d.data[i+2]=v; d.data[i+3]=255; } g.putImageData(d,0,0); graoPad = c; }
+  ctx.save(); ctx.globalAlpha = a; ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = ctx.createPattern(graoPad, 'repeat'); ctx.fillRect(0,0,W,H); ctx.restore();
+}
+function cobrir(ctx, im, x, y, w, h){ const r = Math.max(w/im.width, h/im.height); const iw = im.width*r, ih = im.height*r; ctx.drawImage(im, x+(w-iw)/2, y+(h-ih)/2, iw, ih); }
+function assinatura(ctx, claro){ // marca discreta embaixo
+  ctx.fillStyle = claro ? 'rgba(15,15,16,.45)' : 'rgba(245,243,238,.5)'; ctx.font = '600 26px '+F_SANS; ctx.textAlign = 'center';
+  ctx.fillText((cfg.arroba || cfg.nome || '').toLowerCase(), W/2, H-250); ctx.textAlign = 'left';
+}
 function areaTexto(st){ return st.sticker && st.sticker.tipo !== 'nenhum' ? [TOPO+40, ADES[0]-50] : [TOPO+40, BASE]; }
 function fundoNativo(ctx, cor){
   if (cor === 'grad'){ const g = ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#1B2A6B'); g.addColorStop(.55,'#C2362B'); g.addColorStop(1,'#FFD400'); ctx.fillStyle = g; }
@@ -496,6 +550,42 @@ function desenhar(ctx, st, o){
     const L = ajustar(ctx, st.roteiro || st.texto || 'Escreva o roteiro', { max:64, min:36, maxW:W-192, maxH:1100, peso:600 });
     escrever(ctx, L, 96, 500, { cor:'#F5F3EE', marcaFundo:AM, marcaCor:PR });
     if (st.mostrar){ ctx.fillStyle = AM; ctx.font = '600 34px '+F_SANS; const L2 = ajustar(ctx, 'Mostrar: '+st.mostrar, {max:34,min:28,maxW:W-192,maxH:200,peso:600}); escrever(ctx, L2, 96, 1660, {cor:AM}); }
+    ctx.restore(); return;
+  }
+  if (st.tipo === 'resposta'){
+    const cor = st.fundo || cfg.ritualCor || PR; fundoNativo(ctx, cor);
+    const claro = cor !== 'grad' && lum(cor) > 0.6; const fg = claro ? PR : '#F5F3EE';
+    if (!claro) grao(ctx, .06);
+    // balão da pergunta
+    ctx.font = '500 44px '+F_SANS;
+    const Lq = ajustar(ctx, (st.pergunta || 'Pergunta que chegou').replace(/\*\*/g,''), { max:46, min:34, maxW:W-300, maxH:360, peso:500, lh:1.3 });
+    const bh = Lq.h + 150, bx = 110, by = TOPO + 30;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18; ctx.fillStyle = '#FFFFFF'; rr(ctx, bx, by, W-220, bh, 40); ctx.fill(); ctx.restore();
+    ctx.fillStyle = AM; rr(ctx, bx, by, W-220, 70, 40); ctx.fill(); ctx.fillRect(bx, by+40, W-220, 30);
+    ctx.fillStyle = PR; ctx.font = '700 26px '+F_SANS; ctx.textAlign = 'center'; ctx.fillText('PERGUNTA DA CAIXINHA', W/2, by+46); ctx.textAlign = 'left';
+    escrever(ctx, Lq, W/2, by+100, { alinhar:'centro', cor:'#1C1B19' });
+    // resposta
+    const yA = by + bh + 90; const yLim = st.sticker.tipo !== 'nenhum' ? ADES[0]-40 : BASE;
+    const La = ajustar(ctx, st.texto || '', { max:72, min:40, maxW:W-200, maxH:yLim-yA, peso:700, lh:1.22 });
+    escrever(ctx, La, 100, yA, { cor:fg, marcaFundo: cor === AM ? PR : AM, marcaCor: cor === AM ? AM : PR });
+    assinatura(ctx, claro); ctx.restore(); return;
+  }
+  if (st.tipo === 'case'){
+    ctx.fillStyle = PR; ctx.fillRect(0,0,W,H); grao(ctx, .07);
+    const partes = String(st.texto||'').split(/\n\s*\n/); const titulo = partes[0] || ''; const resto = partes.slice(1).join('\n\n');
+    ctx.fillStyle = AM; ctx.font = '700 28px '+F_SANS; ctx.fillText('RESULTADO', 100, TOPO+30);
+    const Lt = ajustar(ctx, titulo, { max:104, min:60, maxW:W-200, maxH:330, peso:400, fam:F_SERIF, lh:1.02 });
+    const yt = escrever(ctx, Lt, 100, TOPO+70, { cor:'#F5F3EE', marcaFundo:AM, marcaCor:PR });
+    const Lr = resto.trim() ? ajustar(ctx, resto, { max:44, min:32, maxW:W-200, maxH:260, peso:500, lh:1.3 }) : null;
+    const yFimImg = (st.sticker.tipo !== 'nenhum' ? ADES[0]-40 : BASE) - (Lr ? Lr.h + 50 : 0);
+    const fx = 100, fy = yt + 40, fw = W-200, fh = Math.max(300, yFimImg - fy);
+    const im = imagem(fotos[st.id]);
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 20; ctx.fillStyle = '#1E1E22'; rr(ctx, fx, fy, fw, fh, 32); ctx.fill(); ctx.restore();
+    ctx.save(); rr(ctx, fx, fy, fw, fh, 32); ctx.clip();
+    if (im){ const r = Math.min(fw/im.width, fh/im.height); const iw = im.width*r, ih = im.height*r; ctx.globalAlpha = .35; cobrir(ctx, im, fx, fy, fw, fh); ctx.globalAlpha = 1; ctx.fillStyle = 'rgba(15,15,16,.55)'; ctx.fillRect(fx,fy,fw,fh); ctx.drawImage(im, fx+(fw-iw)/2, fy+(fh-ih)/2, iw, ih); }
+    else { ctx.fillStyle = '#6E6E75'; ctx.font = '600 40px '+F_SANS; ctx.textAlign = 'center'; ctx.fillText(o.exportar ? '' : 'Escolha o print', W/2, fy+fh/2); ctx.textAlign = 'left'; }
+    ctx.restore(); ctx.strokeStyle = 'rgba(255,212,0,.6)'; ctx.lineWidth = 3; rr(ctx, fx, fy, fw, fh, 32); ctx.stroke();
+    if (Lr) escrever(ctx, Lr, 100, fy+fh+40, { cor:'rgba(245,243,238,.88)', marcaFundo:AM, marcaCor:PR });
     ctx.restore(); return;
   }
   const v = st.visual;
@@ -518,7 +608,7 @@ function desenhar(ctx, st, o){
     const yTop = st.sticker.tipo !== 'nenhum' ? y0 + Math.max(0,(y1-y0-L.h)*0.35) : y0 + (y1-y0-L.h)/2;
     escrever(ctx, L, W/2, yTop, { alinhar:'centro', cor:corTxt, marcaFundo:mf, marcaCor:mc });
   } else if (v === 'manchete' || v === 'papel'){
-    const escuro = v === 'manchete'; ctx.fillStyle = escuro ? PR : PA; ctx.fillRect(0,0,W,H);
+    const escuro = v === 'manchete'; ctx.fillStyle = escuro ? PR : PA; ctx.fillRect(0,0,W,H); grao(ctx, escuro ? .08 : .05);
     const fg = escuro ? '#F5F3EE' : PR; const mut = escuro ? 'rgba(245,243,238,.6)' : 'rgba(15,15,16,.55)';
     ctx.fillStyle = AM; ctx.beginPath(); ctx.arc(108, TOPO+24, 12, 0, 7); ctx.fill();
     ctx.fillStyle = mut; ctx.font = '600 30px '+F_SANS; ctx.fillText((cfg.nome||'').toUpperCase(), 136, TOPO+35);
@@ -526,10 +616,44 @@ function desenhar(ctx, st, o){
     const yTop = st.sticker.tipo !== 'nenhum' ? y0+110 : Math.max(y0+110, y0 + (y1-y0-L.h)/2);
     const yf = escrever(ctx, L, 96, yTop, { cor:fg, marcaFundo:AM, marcaCor:PR });
     ctx.fillStyle = escuro ? AM : PR; ctx.fillRect(96, yf+36, 120, 10);
+  } else if (v === 'anuncio'){
+    const cor = st.fundo || PR; fundoNativo(ctx, cor);
+    const claro = cor !== 'grad' && lum(cor) > 0.6; const fg = claro ? PR : '#F5F3EE';
+    grao(ctx, claro ? .05 : .08);
+    const partes = String(st.texto||'').split(/\n\s*\n/); const titulo = partes[0] || ''; let corpo = partes.slice(1).join('\n\n');
+    corpo = corpo.replace(/^(\s*)(\d+[.)]|[–-])\s+/gm, (m, a, n) => a + '**' + n + '** ');
+    const Lt = ajustar(ctx, titulo, { max:150, min:70, maxW:W-200, maxH:(y1-y0)*(corpo ? .5 : .85), peso:400, fam:F_SERIF, lh:.98 });
+    const Lc = corpo.trim() ? ajustar(ctx, corpo, { max:56, min:40, maxW:W-200, maxH:(y1-y0) - Lt.h - 140, peso:500, lh:1.32 }) : null;
+    const total = Lt.h + (Lc ? Lc.h + 90 : 0); const yTop = st.sticker.tipo !== 'nenhum' ? y0 + 20 : y0 + Math.max(0, (y1-y0-total)/2);
+    const mf = cor === AM ? PR : AM, mc = cor === AM ? AM : PR;
+    const yt = escrever(ctx, Lt, 100, yTop, { cor:fg, marcaFundo:mf, marcaCor:mc });
+    ctx.fillStyle = mf; ctx.fillRect(100, yt+28, 90, 8);
+    if (Lc) escrever(ctx, Lc, 100, yt+80, { cor:fg, marcaFundo:mf, marcaCor:mc });
+    assinatura(ctx, claro);
+  } else if (v === 'ritual'){
+    const cor = cfg.ritualCor || PR; fundoNativo(ctx, cor);
+    const claro = cor !== 'grad' && lum(cor) > 0.6; const fg = claro ? PR : '#F5F3EE';
+    const rf = imagem(cfg.ritualFoto);
+    if (rf){ cobrir(ctx, rf, 0, 0, W, H); const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(15,15,16,.85)'); g.addColorStop(.55,'rgba(15,15,16,.35)'); g.addColorStop(1,'rgba(15,15,16,.85)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H); }
+    const fgR = rf ? '#F5F3EE' : fg; grao(ctx, .08);
+    ctx.strokeStyle = cor === AM ? PR : AM; ctx.lineWidth = 14; ctx.beginPath(); ctx.arc(W-150, TOPO+150, 230, Math.PI*.55, Math.PI*1.65); ctx.stroke();
+    const d = deIso(o.data || (atual && atual.data) || hoje()); ctx.fillStyle = fgR; ctx.globalAlpha = .7; ctx.font = '600 30px '+F_SANS; ctx.fillText((DIAS[d.getDay()]+' · '+d.getDate()+' '+MESES[d.getMonth()]).toUpperCase(), 100, TOPO+40); ctx.globalAlpha = 1;
+    ctx.fillStyle = fgR; ctx.font = '400 230px '+F_SERIF; ctx.fillText('Caixinha', 88, TOPO+300);
+    const primeiro = (cfg.nome || '').split(' ')[0];
+    ctx.fillStyle = cor === AM && !rf ? PR : AM; ctx.font = 'italic 400 120px '+F_SERIF; ctx.fillText('do '+primeiro, 100, TOPO+430);
+    const frase = st.texto.trim() || cfg.ritualTexto || '';
+    const Lf = ajustar(ctx, frase, { max:54, min:36, maxW:W-220, maxH:260, peso:500, lh:1.3 });
+    escrever(ctx, Lf, 100, TOPO+520, { cor:fgR, marcaFundo:AM, marcaCor:PR });
+  } else if (v === 'capa'){
+    const cor = st.fundo || AM; fundoNativo(ctx, cor);
+    const claro = cor !== 'grad' && lum(cor) > 0.6; const fg = claro ? PR : '#F5F3EE';
+    ctx.strokeStyle = fg; ctx.globalAlpha = .9; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(W/2, H/2, 330, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+    const L = ajustar(ctx, (st.texto || 'Comece aqui').replace(/\*\*/g,''), { max:150, min:70, maxW:520, maxH:420, peso:400, fam:F_SERIF, lh:.95 });
+    escrever(ctx, L, W/2, H/2 - L.h/2 - 10, { alinhar:'centro', cor:fg });
   } else if (v === 'nota'){
     ctx.fillStyle = '#FBFAF6'; ctx.fillRect(0,0,W,H);
     ctx.fillStyle = '#C79A00'; ctx.font = '500 40px '+F_SANS; ctx.fillText('‹ Notas', 70, TOPO+10);
-    ctx.fillStyle = '#9A978F'; ctx.font = '500 28px '+F_SANS; ctx.textAlign = 'center'; const d = new Date(); ctx.fillText(d.getDate()+' de '+MESES[d.getMonth()]+' de '+d.getFullYear(), W/2, TOPO+110); ctx.textAlign = 'left';
+    ctx.fillStyle = '#9A978F'; ctx.font = '500 28px '+F_SANS; ctx.textAlign = 'center'; const d = deIso(o.data || (atual && atual.data) || hoje()); ctx.fillText(d.getDate()+' de '+MESES[d.getMonth()]+' de '+d.getFullYear(), W/2, TOPO+110); ctx.textAlign = 'left';
     const L = ajustar(ctx, st.texto, { max:66, min:40, maxW:W-180, maxH:(y1-y0)-160, peso:600, lh:1.32 });
     escrever(ctx, L, 90, y0+150, { cor:'#1C1B19', marcaFundo:'#FFE45C', marcaCor:'#1C1B19' });
   } else if (v === 'conversa'){
@@ -549,11 +673,11 @@ function desenhar(ctx, st, o){
   }
   ctx.restore();
 }
-function exportavel(st){ return st.tipo !== 'gravar' && !(st.tipo === 'foto' && !fotos[st.id]) && (st.texto.trim() || st.tipo === 'foto'); }
+function exportavel(st){ if (st.tipo === 'gravar') return false; if ((st.tipo === 'foto' || st.tipo === 'case') && !fotos[st.id]) return false; if (st.visual === 'ritual' && st.tipo === 'texto') return true; return !!(st.texto.trim() || st.tipo === 'foto' || (st.tipo === 'resposta' && st.pergunta)); }
 const telaAux = document.createElement('canvas'); telaAux.width = W; telaAux.height = H;
 const miniC = document.createElement('canvas'); miniC.width = 216; miniC.height = 384;
-function miniatura(st){ const c = telaAux.getContext('2d'); desenhar(c, st); const m = miniC.getContext('2d'); m.drawImage(telaAux, 0, 0, 216, 384); return miniC.toDataURL('image/jpeg', .72); }
-function pngBlob(st){ return new Promise(res => { const c = telaAux.getContext('2d'); desenhar(c, st, { exportar:true }); telaAux.toBlob(b => res(b), 'image/png'); }); }
+function miniatura(st, data){ const c = telaAux.getContext('2d'); desenhar(c, st, { data }); const m = miniC.getContext('2d'); m.drawImage(telaAux, 0, 0, 216, 384); return miniC.toDataURL('image/jpeg', .72); }
+function pngBlob(st){ return new Promise(res => { const c = telaAux.getContext('2d'); desenhar(c, st, { exportar:true, data: atual && atual.data }); telaAux.toBlob(b => res(b), 'image/png'); }); }
 function nomeArq(seq, i){ return seq.data+'_story-'+String(i+1).padStart(2,'0')+'.png'; }
 
 /* ========== abas ========== */
@@ -580,7 +704,7 @@ function semanaHTML(ini, sel){
 }
 function linhaSeq(s){
   const st = s.stories[0]; const n = s.stories.length, g = s.stories.filter(x => x.tipo==='gravar').length;
-  return `<button class="item-seq" data-abrir="${s.id}"><img alt="" src="${miniatura(st)}"><div><strong>${esc(s.titulo)}</strong><small>${n} ${n===1?'story':'stories'}${g?' · '+g+' para gravar':''} · ${s.status==='postado'?'postada':'falta postar'}</small></div></button>`;
+  return `<button class="item-seq" data-abrir="${s.id}"><img alt="" src="${miniatura(st, s.data)}"><div><strong>${esc(s.titulo)}</strong><small>${n} ${n===1?'story':'stories'}${g?' · '+g+' para gravar':''} · ${s.status==='postado'?'postada':'falta postar'}</small></div></button>`;
 }
 function ligarLista(raiz){ raiz.querySelectorAll('[data-abrir]').forEach(b => b.onclick = () => abrirSeq(b.dataset.abrir)); }
 
@@ -588,20 +712,24 @@ function renderHoje(){
   const n = ofensiva(); $('#ofensivaN').textContent = n;
   $('#ofensivaTxt').textContent = n === 1 ? 'dia seguido postando' : 'dias seguidos postando';
   $('#hojeData').textContent = rotuloDia(hoje());
+  const semanas = new Set(seqs.filter(s => s.status === 'postado').map(s => inicioSemana(s.data))).size;
+  $('#habito').textContent = 'Semana ' + Math.max(1, semanas) + ' de 50 do hábito · meta de hoje: ' + rotinaDe(hoje()).meta;
   const sh = $('#semanaHoje'); sh.innerHTML = semanaHTML(inicioSemana(hoje())); sh.querySelectorAll('.dia').forEach(b => b.onclick = () => { semSel = b.dataset.d; semIni = inicioSemana(semSel); ir('agenda'); });
-  const l = porDia(hoje()); const c = $('#hojeCartao');
+  const l = porDia(hoje()); const c = $('#hojeCartao'); const R = rotinaDe(hoje());
+  const faixa = `<div class="rotina"><small>Hoje é dia de</small><b>${R.nome}</b><p>${R.dica}</p></div>`;
   if (l.length){
-    c.innerHTML = `<h3>Hoje</h3><div class="lista-seq">${l.map(linhaSeq).join('')}</div>`;
+    c.innerHTML = faixa + `<div class="lista-seq">${l.map(linhaSeq).join('')}</div>`;
     ligarLista(c);
   } else {
     const prox = seqs.filter(s => s.data > hoje() && s.status !== 'postado').sort((a,b) => a.data < b.data ? -1 : 1)[0];
-    c.innerHTML = `<h2>Hoje ainda não tem story.</h2><p class="muted">Um story simples hoje vale mais que um perfeito amanhã.</p>
-      <div class="linha">${MODO==='escrita' ? '<button class="pri" data-q="porMim">Escreve por mim</button><button data-q="dia">Contar o dia</button>' : ''}<button data-q="branco">Escrever eu mesmo</button>${prox ? '<button data-q="puxar">Usar a de '+DIAS[deIso(prox.data).getDay()]+'</button>' : ''}</div>`;
+    c.innerHTML = faixa + `<p class="muted">Hoje ainda não tem story. Um simples hoje vale mais que um perfeito amanhã.</p>
+      <div class="linha">${MODO==='escrita' ? '<button class="pri" data-q="porMim">Escreve por mim</button>' + (R.e==='caixinha' ? '<button data-q="caixinha">Responder a caixinha</button>' : '<button data-q="dia">Contar o dia</button>') : (R.e==='caixinha' ? '<button class="pri" data-q="manual">Montar caixinha</button>' : '')}<button data-q="branco">Escrever eu mesmo</button>${prox ? '<button data-q="puxar">Usar a de '+DIAS[deIso(prox.data).getDay()]+'</button>' : ''}</div>`;
     c.querySelectorAll('[data-q]').forEach(b => b.onclick = () => {
       const q = b.dataset.q;
       if (q === 'branco') emBranco(hoje());
       else if (q === 'puxar'){ prox.data = hoje(); salvarSeqs(); abrirSeq(prox.id); }
-      else if (q === 'porMim'){ escolherEntrada('opiniao'); $('#entradaTxt').value = ''; $('#optData').value = hoje(); ir('criar'); gerar(true); }
+      else if (q === 'porMim'){ escolherEntrada(R.e); $('#entradaTxt').value = ''; $('#optData').value = hoje(); ir('criar'); gerar(true); }
+      else if (q === 'manual'){ ir('criar'); $('#caixinhaManual').hidden = false; $('#perguntasManual').focus(); }
       else { escolherEntrada(q); $('#optData').value = hoje(); ir('criar'); }
     });
   }
@@ -614,11 +742,12 @@ function renderAgenda(){
   const sa = $('#semanaAgenda'); sa.innerHTML = semanaHTML(semIni, semSel);
   sa.querySelectorAll('.dia').forEach(x => x.onclick = () => { semSel = x.dataset.d; renderAgenda(); });
   const l = porDia(semSel); const c = $('#diaCartao');
-  c.innerHTML = `<h3>${rotuloDia(semSel)}</h3>` + (l.length ? `<div class="lista-seq">${l.map(linhaSeq).join('')}</div>` : '<p class="muted">Nada planejado.</p>') +
+  const RS = rotinaDe(semSel);
+  c.innerHTML = `<h3>${rotuloDia(semSel)}</h3><p class="dica"><b>${RS.nome}</b> · ${RS.meta}</p>` + (l.length ? `<div class="lista-seq">${l.map(linhaSeq).join('')}</div>` : '<p class="muted">Nada planejado.</p>') +
     `<div class="linha">${MODO==='escrita' ? '<button class="peq pri" data-q="criar">Criar para este dia</button>' : ''}<button class="peq" data-q="branco">Escrever eu mesmo</button></div>`;
   ligarLista(c);
-  c.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { if (b.dataset.q === 'branco') emBranco(semSel); else { $('#optData').value = semSel; ir('criar'); } });
-  $('#horaLembrete').value = cfg.hora || '19:00';
+  c.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { if (b.dataset.q === 'branco') emBranco(semSel); else { $('#optData').value = semSel; escolherEntrada(RS.e); ir('criar'); } });
+  $('#horaLembrete').value = cfg.hora || '06:30';
 }
 $('#semAnt').onclick = () => { semIni = soma(semIni,-7); semSel = semIni; renderAgenda(); };
 $('#semProx').onclick = () => { semIni = soma(semIni,7); semSel = semIni; renderAgenda(); };
@@ -626,7 +755,7 @@ $('#semProx').onclick = () => { semIni = soma(semIni,7); semSel = semIni; render
 /* ========== editor da sequência ========== */
 const tela = $('#tela'), tctx = tela.getContext('2d');
 let editando = false;
-function redesenhar(){ if (abaAtual === 'stories' && atual && atual.stories[idx]) { desenhar(tctx, atual.stories[idx]); guiaAdesivo(); } }
+function redesenhar(){ if (abaAtual === 'stories' && atual && atual.stories[idx]) { desenhar(tctx, atual.stories[idx], { data: atual.data }); guiaAdesivo(); } }
 function guiaAdesivo(){
   const st = atual.stories[idx], g = $('#adesivoGuia'); const t = st.sticker.tipo;
   if (t === 'nenhum' || st.tipo === 'gravar'){ g.hidden = true; return; }
@@ -636,7 +765,7 @@ function guiaAdesivo(){
 }
 function renderFita(){
   const f = $('#fita');
-  f.innerHTML = atual.stories.map((st,i) => `<button class="mini" data-i="${i}" aria-current="${i===idx}"><img alt="Story ${i+1}" src="${miniatura(st)}"><span>${i+1}${st.tipo==='gravar'?' · gravar':''}</span></button>`).join('') +
+  f.innerHTML = atual.stories.map((st,i) => `<button class="mini" data-i="${i}" aria-current="${i===idx}"><img alt="Story ${i+1}" src="${miniatura(st, atual.data)}"><span>${i+1}${st.tipo==='gravar'?' · gravar':''}</span></button>`).join('') +
     `<button class="mini add" id="btNovoStory"><div class="mais">+</div><span>novo</span></button>`;
   f.querySelectorAll('.mini[data-i]').forEach(b => b.onclick = () => { idx = +b.dataset.i; renderStories(); });
   $('#btNovoStory').onclick = () => { atual.stories.push(novoStory({ visual: atual.stories[idx] ? atual.stories[idx].visual : 'nativo', fundo: atual.stories[idx] ? atual.stories[idx].fundo : '' })); idx = atual.stories.length-1; salvarSeqs(); renderStories(); $('#edTexto').focus(); };
@@ -651,20 +780,23 @@ function renderStories(){
   $('#contador').textContent = (idx+1)+' de '+atual.stories.length;
   renderFita();
   editando = true;
-  $('#edTexto').value = st.texto; $('#edRoteiro').value = st.roteiro; $('#edMostrar').value = st.mostrar;
+  $('#edTexto').value = st.texto; $('#edPergunta').value = st.pergunta || ''; $('#edRoteiro').value = st.roteiro; $('#edMostrar').value = st.mostrar;
   $('#edTipo').value = st.tipo; $('#edVisual').value = st.visual;
   $('#edAdesivo').value = st.sticker.tipo; $('#edAdesivoTxt').value = st.sticker.texto; $('#edOpcoes').value = st.sticker.opcoes.join(' / ');
   $('#sqTitulo').value = atual.titulo; $('#sqData').value = atual.data; $('#sqEstilo').value = '';
   editando = false;
-  const et = $('#etTipo'); et.className = 'etiqueta' + (st.tipo==='gravar'?' gravar':''); et.textContent = st.tipo==='gravar' ? 'Gravar no Instagram' : st.tipo==='foto' ? 'Foto sua' : 'Imagem';
+  const et = $('#etTipo'); et.className = 'etiqueta' + (st.tipo==='gravar'?' gravar':''); et.textContent = ({ gravar:'Gravar no Instagram', foto:'Foto sua', resposta:'Resposta de caixinha', case:'Resultado com print' })[st.tipo] || 'Imagem';
+  $('#rotPergunta').hidden = st.tipo !== 'resposta';
+  $('#rotTexto').textContent = st.tipo === 'resposta' ? 'Sua resposta' : st.tipo === 'case' ? 'Resultado (1ª linha) e contexto (depois de uma linha em branco)' : (st.visual === 'anuncio' && st.tipo === 'texto') ? 'Título (1º parágrafo) e texto (depois de uma linha em branco)' : (st.visual === 'ritual' && st.tipo === 'texto') ? 'Frase da capa (vazio = a dos Ajustes)' : 'Texto do story';
+  $('#rotFoto').textContent = st.tipo === 'case' ? 'Escolher print' : 'Escolher foto';
   $('#blocoGravar').hidden = st.tipo !== 'gravar'; $('#btTele').hidden = st.tipo !== 'gravar';
-  $('#blocoFoto').hidden = st.tipo !== 'foto';
+  $('#blocoFoto').hidden = !(st.tipo === 'foto' || st.tipo === 'case');
   $('#edVisual').closest('label').hidden = st.tipo !== 'texto';
-  $('#blocoCor').hidden = !(st.tipo === 'texto' && (st.visual === 'nativo' || st.visual === 'conversa'));
+  $('#blocoCor').hidden = !((st.tipo === 'texto' && ['nativo','conversa','anuncio','capa'].includes(st.visual)) || st.tipo === 'resposta');
   const ad = st.sticker.tipo; $('#rotAdesivoTxt').hidden = ad === 'nenhum'; $('#rotOpcoes').hidden = !(ad === 'enquete' || ad === 'quiz');
   $('#rotAdesivoTxt').firstChild.textContent = ad === 'link' ? 'Texto do link' : 'Pergunta do adesivo';
   $('#btCopiarAdesivo').hidden = ad === 'nenhum' || !st.sticker.texto;
-  const cores = $('#cores'); const atualCor = st.fundo || (st.visual==='conversa' ? AM : '#0F0F10');
+  const cores = $('#cores'); const atualCor = st.fundo || ((st.visual==='conversa' || st.visual==='capa') && st.tipo==='texto' ? AM : st.tipo==='resposta' ? (cfg.ritualCor||'#0F0F10') : '#0F0F10');
   cores.innerHTML = CORES_NATIVO.map(c => `<button data-c="${c}" aria-pressed="${c===atualCor}" aria-label="Fundo ${c==='grad'?'degradê':c}" style="background:${c==='grad'?'linear-gradient(135deg,#1B2A6B,#C2362B,#FFD400)':c}"></button>`).join('');
   cores.querySelectorAll('button').forEach(b => b.onclick = () => { st.fundo = b.dataset.c; mudou(true); renderStories(); });
   const cf = atual.conferir.filter(Boolean), rm = atual.respostasModelo.filter(Boolean);
@@ -673,13 +805,15 @@ function renderStories(){
   $('#sqDispositivos').textContent = atual.dispositivos.length ? 'Recursos usados: ' + atual.dispositivos.join(', ') + '.' : '';
   $('#btPostado').textContent = atual.status === 'postado' ? 'Desmarcar postada' : 'Marcar como postada';
   $('#confirmaApagar').hidden = true;
+  renderConferencia();
   redesenhar(); renderAcao();
 }
 let tMini;
-function mudou(redes){ salvarSeqs(); if (redes) redesenhar(); clearTimeout(tMini); tMini = setTimeout(() => { if (abaAtual==='stories' && atual) renderFita(); }, 500); }
+function mudou(redes){ salvarSeqs(); if (redes) redesenhar(); clearTimeout(tMini); tMini = setTimeout(() => { if (abaAtual==='stories' && atual){ renderFita(); renderConferencia(); } }, 500); }
 function st(){ return atual.stories[idx]; }
 $('#edTexto').oninput = e => { if (editando) return; st().texto = e.target.value; mudou(true); };
 $('#edRoteiro').oninput = e => { st().roteiro = e.target.value; mudou(true); };
+$('#edPergunta').oninput = e => { st().pergunta = e.target.value; mudou(true); };
 $('#edMostrar').oninput = e => { st().mostrar = e.target.value; mudou(true); };
 $('#edTipo').onchange = e => { st().tipo = e.target.value; mudou(); renderStories(); };
 $('#edVisual').onchange = e => { st().visual = e.target.value; st().fundo = ''; mudou(); renderStories(); };
@@ -702,12 +836,41 @@ $('#btNaoApagar').onclick = () => { $('#confirmaApagar').hidden = true; };
 $('#btSimApagar').onclick = () => { atual.stories.forEach(x => delete fotos[x.id]); seqs = seqs.filter(s => s !== atual); atual = null; salvarFotos(); salvarSeqs(); ir('hoje'); };
 function aplicarEstilo(seq, estilo){
   if (!estilo) return; const bonitos = ['manchete','papel','nota','conversa'];
-  seq.stories.forEach((x,i) => { if (x.tipo !== 'texto') return; if (estilo === 'natural') x.visual = 'nativo'; else if (estilo === 'bonito') x.visual = bonitos[i % bonitos.length]; else x.visual = i % 2 ? bonitos[(i>>1) % bonitos.length] : 'nativo'; x.fundo = ''; });
+  seq.stories.forEach((x,i) => { if (x.tipo !== 'texto' || x.visual === 'ritual' || x.visual === 'capa') return; if (estilo === 'natural') x.visual = 'nativo'; else if (estilo === 'bonito') x.visual = bonitos[i % bonitos.length]; else x.visual = i % 2 ? bonitos[(i>>1) % bonitos.length] : 'nativo'; x.fundo = ''; });
 }
 function lerFoto(arq, max){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { const k = Math.min(1, max/Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width*k); c.height = Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res(c.toDataURL('image/jpeg', .82)); }; im.onerror = rej; im.src = r.result; }; r.onerror = rej; r.readAsDataURL(arq); }); }
 $('#edFoto').onchange = async e => { const f = e.target.files[0]; if (!f) return; fotos[st().id] = await lerFoto(f, 1600); salvarFotos(); e.target.value = ''; mudou(true); renderStories(); };
 $('#btTirarFoto').onclick = () => { delete fotos[st().id]; salvarFotos(); mudou(true); renderStories(); };
 $('#btTirarFoto').textContent = 'Tirar a foto';
+
+/* ========== conferência antes de postar (GÊNESE: valide antes de postar) ========== */
+const PROIBIDAS = ['exclusivo','único','promocional','não perca','infalível','imperdível','garantido','revolucionário','transformador','descubra','o segredo','você sabia que','vamos falar sobre','game changer','confira','dica de ouro','vou te ensinar','simples assim'];
+const FRACAS = ['talvez','meio que','acho que','um pouco','basicamente','na verdade','tipo assim','de certa forma','quem sabe','meio'];
+const BAIT = /compartilh|marca (um|uma|aquele|o) amig|manda (pra|para) (alguém|quem)|me segue|comenta (aqui|a palavra|“|")|curte se/i;
+function conferencia(seq){
+  const av = []; const n = seq.stories.length;
+  seq.stories.forEach((x, i) => {
+    const t = (x.tipo === 'gravar' ? x.roteiro : x.texto) || ''; const baixo = t.toLowerCase(); const num = 'Story ' + (i+1) + ': ';
+    PROIBIDAS.forEach(w => { if (baixo.includes(w)) av.push(num + 'tira "' + w + '" (cheira a venda).'); });
+    const fr = FRACAS.filter(w => new RegExp('(^|[^\\p{L}])' + w + '([^\\p{L}]|$)', 'iu').test(baixo)); if (fr.length) av.push(num + 'palavra fraca: ' + fr.join(', ') + '.');
+    if (BAIT.test(t)) av.push(num + 'pedido de interação forçado. Troque por uma pergunta de verdade.');
+    if (x.tipo !== 'gravar'){
+      const pal = t.replace(/\*\*/g,'').split(/\s+/).filter(Boolean).length; if (pal > 45) av.push(num + pal + ' palavras. Fragmente: no máximo 40.');
+      t.replace(/\*\*/g,'').split(/[.!?\n]+/).forEach(f => { const k = f.split(/\s+/).filter(Boolean).length; if (k > 22) av.push(num + 'frase de ' + k + ' palavras. Quebre com ponto-final.'); });
+      const neg = (t.match(/\*\*/g) || []).length / 2; if (neg > 3) av.push(num + 'muitas palavras destacadas. Deixe 1 a 3.');
+    }
+    if ((x.tipo === 'foto' || x.tipo === 'case') && !fotos[x.id]) av.push(num + (x.tipo === 'case' ? 'falta o print.' : 'falta a foto.'));
+    if (x.tipo === 'resposta' && !x.texto.trim()) av.push(num + 'falta a sua resposta.');
+  });
+  const ult = seq.stories[n-1]; const R = rotinaDe(seq.data);
+  if (R.e !== 'leve' && ult && ult.sticker.tipo === 'nenhum' && seq.gatilho !== 'destaque' && seq.gatilho !== 'capas') av.push('O último story não tem adesivo. Termine com uma caixinha ou enquete.');
+  return av;
+}
+function renderConferencia(){
+  const c = $('#conferencia'); if (!c || !atual) return;
+  const av = conferencia(atual);
+  c.innerHTML = '<h3>Conferência antes de postar</h3>' + (av.length ? '<ul style="margin:0;padding-left:18px">' + av.map(a => '<li>' + esc(a) + '</li>').join('') + '</ul>' : '<p class="okc">Tudo certo para postar.</p>');
+}
 
 /* ========== teleprompter ========== */
 let teleRaf = null, teleY = 0, teleUlt = 0, wake = null;
@@ -798,9 +961,9 @@ $('#btBaixarAzul').onclick = async () => {
 
 /* ========== lembrete (.ics) ========== */
 $('#btLembrete').onclick = () => {
-  const [hh, mm] = ($('#horaLembrete').value || '19:00').split(':'); cfg.hora = hh+':'+mm; gravar(K.cfg, cfg);
+  const [hh, mm] = ($('#horaLembrete').value || '06:30').split(':'); cfg.hora = hh+':'+mm; gravar(K.cfg, cfg);
   const d = hoje().replace(/-/g,''); const agora = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
-  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Motor Stories//PT-BR','BEGIN:VEVENT','UID:motor-stories-diario@dan','DTSTAMP:'+agora,'DTSTART:'+d+'T'+hh+mm+'00','DURATION:PT15M','RRULE:FREQ=DAILY','SUMMARY:Stories de hoje','DESCRIPTION:Abrir o Motor Stories: '+LINK_VERMELHO,'URL:'+LINK_VERMELHO,'BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:Stories de hoje','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
+  const ics = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Motor Stories//PT-BR','BEGIN:VEVENT','UID:motor-stories-diario@dan','DTSTAMP:'+agora,'DTSTART:'+d+'T'+hh+mm+'00','DURATION:PT15M','RRULE:FREQ=DAILY','SUMMARY:Stories da manhã','DESCRIPTION:Abrir o Motor Stories: '+LINK_VERMELHO,'URL:'+LINK_VERMELHO,'BEGIN:VALARM','TRIGGER:PT0M','ACTION:DISPLAY','DESCRIPTION:Stories de hoje','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n');
   baixarLocal([new File([ics], 'lembrete-stories.ics', { type:'text/calendar' })]);
   toast('Abra o arquivo baixado para adicionar ao calendário.');
 };
@@ -808,13 +971,18 @@ $('#btLembrete').onclick = () => {
 /* ========== criar com o Claude ========== */
 const ENTRADAS = {
   dia: { rot:'O que aconteceu', ph:'Fala solto: o que você fez, quanto tempo, o que alguém disse, o que cansou, o que você pensou fazendo aquilo.', dica:'Stories pedem mais matéria-prima que carrossel. Se vier curto, o Motor pergunta antes de escrever.' },
-  caixinha: { rot:'Respostas que chegaram', ph:'Cole as perguntas ou respostas da caixinha de ontem, uma por linha. Pode juntar o que você responderia.', dica:'O dia 2 do ciclo: as respostas de ontem viram a sequência de hoje, que termina em outra caixinha.' },
+  caixinha: { rot:'Perguntas que chegaram', ph:'Cole as perguntas da caixinha de ontem, uma por linha. Se quiser, escreva embaixo o que você responderia, solto. Vazio: o Motor planta 2 ou 3 perguntas para você.', dica:'Terça a sexta: cada pergunta vira um story de resposta, e no fim a capa de sempre abre a caixinha de hoje.' },
   carrossel: { rot:'O carrossel de hoje', ph:'Cole a capa e os pontos principais do carrossel (ou o JSON do Motor Editorial).', dica:'Leva quem já segue para o post do feed sem pedir: um bastidor do porquê e o ponto que mais incomoda.' },
   opiniao: { rot:'Assunto (opcional)', ph:'Deixe vazio para o Motor puxar um tema dos seus pilares, ou escreva uma ideia solta.', dica:'Opinião sincera em poucos stories. O que for afirmação sobre você vem marcado para você conferir.' },
+  abertura: { rot:'O que você quer dizer nesta segunda', ph:'Opcional. Se quiser, preencha:\nTítulo (uma afirmação forte):\nPor que você pensa assim:\nComo você faz diferente (até 3):\nO que a pessoa leva disso:', dica:'Segunda alcança mais. Estrutura do protocolo: título forte, contexto, como você faz diferente do senso comum, o que a pessoa leva disso. Sem oferta.' },
+  bastidor: { rot:'O que aconteceu na semana', ph:'Um resultado (seu ou de cliente), o que fez dar certo, se tem print ou antes e depois. Pode ser um erro que virou lição.', dica:'Sábado: um bastidor concreto. Se tiver print, o Motor monta o story de resultado e você só escolhe a imagem.' },
+  leve: { rot:'Alguma coisa da semana (opcional)', ph:'Uma frase, um momento, algo que você viu. Pode deixar vazio.', dica:'Domingo leve: 1 a 3 stories, sem tarefa e sem pressão. Só para não sumir.' },
+  destaque: { rot:'Algo que não pode faltar (opcional)', ph:'Para quem é o seu perfil, qual problema essa pessoa tem, como você ajuda. Pode deixar vazio: o Motor usa o seu posicionamento.', dica:'Sequência fixa para o destaque Comece aqui: para quem é o perfil, o problema, como você ajuda e boas-vindas.' },
   semana: { rot:'O que vem pela frente', ph:'Opcional: compromissos, entregas, o que você vai fazer, carrosséis da semana. Quanto mais, melhor.', dica:'Gera 7 sequências, uma por dia. Os dias sem matéria-prima viram roteiro do que gravar, não história inventada.' }
 };
 let entrada = 'dia';
 function escolherEntrada(e){ entrada = e; $$('#entradaSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.e === e)); const c = ENTRADAS[e]; $('#entradaRotulo').textContent = c.rot; $('#entradaTxt').placeholder = c.ph; $('#entradaDica').textContent = c.dica; $('#gate').hidden = true; $('#btPular').hidden = true; $('#btGerar').textContent = e === 'semana' ? 'Escrever a semana' : 'Escrever sequência'; }
+function entradaDoDia(){ return rotinaDe($('#optData').value || hoje()).e; }
 $$('#entradaSeg button').forEach(b => b.onclick = () => escolherEntrada(b.dataset.e));
 escolherEntrada('dia');
 $('#optData').value = hoje();
@@ -829,7 +997,7 @@ POSICIONAMENTO (v4)
 
 REGRA DE OURO: só fatos que estão na entrada do Daniel. Não invente cena, hora, duração, número, nome, lugar, diálogo, cliente, sensação ou resultado. Se faltar matéria-prima, faça perguntas (formato "perguntas") ou transforme o story em "gravar", com roteiro do que mostrar e falar ao vivo. Opinião atribuída ao Daniel que não esteja na entrada entra também em "conferir".
 
-VOZ (método de conversa do Elton Luiz, adaptado; não copie frases dele)
+VOZ (método de conversa do Elton Luiz, adaptado; não copie frases dele). Vale para todos os dias da rotina.
 - Como quem conta para um amigo o que aconteceu hoje. Frases curtas. Uma ideia por story. Muita quebra de linha.
 - Detalhe concreto (o detalhe do detalhe) tirado da entrada; número específico só se ele disse.
 - Coloquial com medida ("cara", "sabe?", "né") e no máximo 1 vez por sequência cada. Sem palavrão, a menos que esteja na entrada.
@@ -843,8 +1011,18 @@ MÉTODO (Leandro Ladeira, Light Copy e Stories 10x)
 - Palavras proibidas: exclusivo, único, promocional, não perca, infalível, imperdível, garantido, revolucionário, transformador, "agora" como urgência, descubra, o segredo, você sabia que, vamos falar sobre, game changer, confira, dica de ouro, vou te ensinar, simples assim.
 - Sem engagement bait: nada de "compartilha", "marca um amigo", "manda pra alguém", "me segue", "comenta X", "curte se concorda".
 
+ROTINA DE STORIES (Protocolo GÊNESE adaptado, SEM OFERTAS por enquanto)
+- Stories servem para mostrar que o Daniel sabe resolver o problema de quem vive do próprio trabalho e trava no conteúdo, e como fica a vida depois disso. Se não serve para isso nem para aproximar, não entra.
+- Escrita: fragmente o texto, uma frase por linha, abuse do ponto-final, destaque a palavra-chave em **negrito**, corte palavras fracas (talvez, meio que, acho que, um pouco, basicamente, na verdade, tipo assim) e justificativas longas.
+- Sem oferta, sem preço, sem vagas, sem escassez, sem "responda com PALAVRA". Direct só como conversa ("me chama no direct que eu te conto"), no máximo 1 vez por semana.
+- Segunda (gatilho "abertura"), 3 a 4 stories: título forte (afirmação ou objetivo; use visual "anuncio") → contexto (por que ele pensa assim, só com fato dado) → como (até 3 coisas que ele faz diferente do senso comum) → o que a pessoa leva disso → interação.
+- Terça a sexta (gatilho "caixinha"), 5 a 10 stories: cada pergunta recebida vira 1 story tipo "resposta" (campo "pergunta" = a pergunta como chegou; "texto" = resposta curta, generosa e direta, troca sugestão por orientação: "faça", "corte", "poste"). Pode haver 1 story de gancho antes das respostas. Termine com 1 story tipo "texto", visual "ritual" (a capa fixa da caixinha), texto vazio e adesivo caixinha com pergunta curta. Se não houver perguntas na entrada, crie 2 ou 3 perguntas plausíveis sobre os temas do Daniel (no começo ele mesmo manda as perguntas) e coloque em "conferir": "pergunta plantada: …". Opinião nas respostas que não está na entrada também vai em "conferir".
+- Sábado (gatilho "bastidor"), 3 a 6 stories: resultado concreto da semana. Se houver print/resultado, use tipo "case" (texto = resultado em 1 linha, linha em branco, contexto curto do que fez dar certo; "mostrar" = qual print usar). Sem resultado na entrada: bastidor gravado com roteiro.
+- Domingo (gatilho "leve"): 1 a 3 stories, sem tarefa, tom de conversa; adesivo opcional.
+- Destaque (gatilho "destaque"): sequência "Comece aqui", 4 a 6 stories: para quem é o perfil → qual problema essa pessoa tem → como o Daniel ajuda → boas-vindas simples. Sem data, sem adesivo, sem oferta.
+
 ESTRUTURA DA SEQUÊNCIA
-- 2 a 8 stories. O tamanho vem do assunto; nunca estique para chegar num número.
+- 2 a 10 stories (respeite a rotina do dia). O tamanho vem do assunto; nunca estique para chegar num número.
 - Story 1: cena ou afirmação real. Nunca pergunta retórica genérica ("você já parou pra pensar...").
 - Meio: 1 ideia por story, até 30 palavras (máximo 40).
 - Penúltimo: a virada, opinião sincera do Daniel.
@@ -855,7 +1033,8 @@ ESTRUTURA DA SEQUÊNCIA
 
 TIPOS E VISUAIS
 - tipo "texto": imagem com texto. tipo "foto": foto do Daniel (ele escolhe) com texto curto por cima; use quando a entrada fala de algo que dá para fotografar (mesa, tela, lugar, objeto). tipo "gravar": ele grava no Instagram falando para a câmera ou mostrando a tela; preencha "roteiro" (falas em linhas curtas, 15 a 40 segundos, começa pelo gancho) e "mostrar" (o que filmar).
-- visual: "nativo" (parece feito no próprio Instagram: texto centralizado em fundo de cor), "manchete" (fundo preto, frase grande), "papel" (fundo claro), "nota" (app de notas, bom para lista curta ou desabafo), "conversa" (parece um tweet, bom para frase de opinião).
+- tipo "resposta": resposta de caixinha (preencha "pergunta"). tipo "case": resultado com print (o Daniel escolhe a imagem).
+- visual: "nativo" (parece feito no próprio Instagram: texto centralizado em fundo de cor), "manchete" (fundo preto, frase grande), "papel" (fundo claro), "nota" (app de notas, bom para lista curta ou desabafo), "conversa" (parece um tweet, bom para frase de opinião), "anuncio" (título grande em serifa no 1º parágrafo; depois de uma linha em branco, texto ou lista "1. … 2. …"), "ritual" (capa fixa da caixinha; só no fim dos dias de caixinha).
 - Estilo natural: maioria nativo, foto e gravar. Estilo bonito: manchete, papel, nota, conversa. Misto: alterne, começando por nativo.
 - Alterne visuais; nunca 3 stories seguidos iguais.
 
@@ -863,17 +1042,10 @@ FORMATO DA RESPOSTA
 Se faltar matéria-prima (menos de 3 fatos concretos na entrada) e a entrada não pedir para escrever mesmo assim:
 {"perguntas":["3 a 5 perguntas curtas e soltas, tipo: quantas vezes você já fez isso? o que cansa nisso? alguém falou alguma coisa? o que você pensa fazendo isso? vale a pena?"]}
 Senão:
-{"sequencias":[{"data":"AAAA-MM-DD","titulo":"até 40 caracteres","gatilho":"dia|caixinha|carrossel|opiniao|bastidor|fixa","dispositivos":["recursos do Ladeira usados"],"stories":[{"tipo":"texto|foto|gravar","visual":"nativo|manchete|papel|nota|conversa","texto":"texto que aparece (para gravar: a frase de abertura)","roteiro":"só para gravar","mostrar":"só para gravar ou foto: o que mostrar","fundo":"opcional para nativo: #0F0F10, #FFD400, #F5F3EE, #1B2A6B, #C2362B, #2E5E4E ou grad","sticker":{"tipo":"nenhum|caixinha|enquete|quiz|slider|link","texto":"pergunta curta do adesivo","opcoes":["só para enquete e quiz"]}}],"respostasModelo":["2 ou 3 respostas que o Daniel pode usar amanhã se a caixinha vier fraca, escritas como pergunta de seguidor + resposta curta dele, sem inventar fato"],"conferir":["cada afirmação sobre o Daniel ou opinião dele que não está na entrada"]}]}`;
+{"sequencias":[{"data":"AAAA-MM-DD","titulo":"até 40 caracteres","gatilho":"dia|abertura|caixinha|bastidor|leve|carrossel|opiniao|destaque","dispositivos":["recursos do Ladeira usados"],"stories":[{"tipo":"texto|foto|gravar|resposta|case","visual":"nativo|manchete|papel|nota|conversa|anuncio|ritual","pergunta":"só para resposta","texto":"texto que aparece (para gravar: a frase de abertura)","roteiro":"só para gravar","mostrar":"só para gravar ou foto: o que mostrar","fundo":"opcional para nativo: #0F0F10, #FFD400, #F5F3EE, #1B2A6B, #C2362B, #2E5E4E ou grad","sticker":{"tipo":"nenhum|caixinha|enquete|quiz|slider|link","texto":"pergunta curta do adesivo","opcoes":["só para enquete e quiz"]}}],"respostasModelo":["2 ou 3 respostas que o Daniel pode usar amanhã se a caixinha vier fraca, escritas como pergunta de seguidor + resposta curta dele, sem inventar fato"],"conferir":["cada afirmação sobre o Daniel ou opinião dele que não está na entrada"]}]}`;
 
-const RITMO_SEMANA = `Ritmo da semana (adapte ao que o Daniel contar):
-- segunda: bastidor da semana, story gravado mostrando a mesa/tela e o que vem.
-- terça: marca decodificada: uma marca que ele viu (foto) e por que foi lembrada; termina em enquete.
-- quarta: opinião super sincera sobre conteúdo e ser lembrado; termina em caixinha.
-- quinta: respostas da caixinha de quarta (como ainda não chegaram, deixe stories "gravar" com roteiro para responder ao vivo + use respostasModelo).
-- sexta: IA nos bastidores, gravar a tela mostrando um uso real que ele mencionou, ou roteiro do que mostrar.
-- sábado: repertório leve (algo que ele leu, viu, ouviu); curto, 2 a 3 stories.
-- domingo: crônica curta ou reflexão da semana; termina em slider ou caixinha.
-Nos dias sem fato dado pelo Daniel, os stories de conteúdo pessoal são "gravar" com roteiro em forma de perguntas para ele responder ao vivo. Pode haver stories de opinião em texto, sempre listados em "conferir".`;
+const RITMO_SEMANA = `Rotina da semana (Protocolo GÊNESE adaptado, sem ofertas): segunda = abertura; terça a sexta = caixinha; sábado = bastidor; domingo = leve. Use o gatilho de cada dia.
+Nos dias de caixinha da semana ainda não chegaram perguntas: plante 2 ou 3 por dia (diferentes entre os dias, sobre conteúdo, marca, ser lembrado e IA nos bastidores), marcadas em "conferir". Nos dias sem fato dado pelo Daniel, o conteúdo pessoal vira "gravar" com roteiro em forma de perguntas para ele responder ao vivo.`;
 
 let sampleFn = null, ctl = null, perguntasGate = [];
 (async () => {
@@ -892,7 +1064,7 @@ function montarPrompt(forcar){
     const datas = Array.from({length:7}, (_,i) => { const d = soma(data,i); return d+' ('+DIAS[deIso(d).getDay()]+')'; }).join(', ');
     pedido = `PEDIDO: escreva 7 sequências, uma para cada data: ${datas}.\n${RITMO_SEMANA}\nNão use o formato "perguntas": escreva a semana com o que houver.`;
   } else {
-    const nomes = { dia:'O Daniel contou o dia (gatilho "dia").', caixinha:'Respostas/perguntas que chegaram na caixinha de ontem (gatilho "caixinha"). Responda de verdade, com opinião dele marcada em conferir quando não estiver na entrada, e termine em nova caixinha.', carrossel:'Carrossel do feed de hoje (gatilho "carrossel"). Leve quem segue ao post sem pedir clique.', opiniao:'Opinião (gatilho "opiniao"). Se a entrada estiver vazia, escolha um tema dos pilares e escreva uma opinião sincera curta, toda listada em conferir.' };
+    const nomes = { dia:'O Daniel contou o dia (gatilho "dia").', caixinha:'Dia de caixinha (gatilho "caixinha"): a entrada traz as perguntas que chegaram ontem (uma por linha) e talvez o que ele responderia. Siga a rotina de caixinha.', abertura:'Abertura da semana (gatilho "abertura"). Siga a rotina de segunda.', bastidor:'Bastidor da semana (gatilho "bastidor"). Siga a rotina de sábado.', leve:'Domingo leve (gatilho "leve"), 1 a 3 stories.', destaque:'Destaque Comece aqui (gatilho "destaque"). Use o posicionamento; o que não estiver na entrada vai em conferir.', carrossel:'Carrossel do feed de hoje (gatilho "carrossel"). Leve quem segue ao post sem pedir clique.', opiniao:'Opinião (gatilho "opiniao"). Se a entrada estiver vazia, escolha um tema dos pilares e escreva uma opinião sincera curta, toda listada em conferir.' };
     pedido = `PEDIDO: escreva 1 sequência para ${data} (${DIAS[deIso(data).getDay()]}). ${nomes[entrada]}`;
     if (forcar || entrada !== 'dia') pedido += '\nNão use o formato "perguntas": escreva com o que houver, sem inventar; o que faltar vira "gravar".';
   }
@@ -926,7 +1098,7 @@ async function gerar(forcar){
   } finally { $('#btGerar').disabled = false; $('#btPorMim').disabled = false; $('#btParar').hidden = true; ctl = null; }
 }
 $('#btGerar').onclick = () => gerar(false);
-$('#btPorMim').onclick = () => { if (entrada !== 'semana') escolherEntrada('opiniao'); gerar(true); };
+$('#btPorMim').onclick = () => { if (entrada !== 'semana' && entrada !== 'destaque' && !$('#entradaTxt').value.trim()) escolherEntrada(entradaDoDia()); gerar(true); };
 $('#btPular').onclick = () => gerar(true);
 $('#btParar').onclick = () => { ctl && ctl.abort(); };
 
@@ -939,9 +1111,31 @@ $('#btEmBranco').onclick = () => emBranco($('#optData').value || hoje());
 $('#btColarJson').onclick = () => { $('#jsonTxt').hidden = false; $('#btImportar').hidden = false; $('#jsonTxt').focus(); };
 $('#btImportar').onclick = async () => { if (await importarTexto($('#jsonTxt').value)){ $('#jsonTxt').value = ''; $('#jsonTxt').hidden = true; $('#btImportar').hidden = true; } };
 $('#btColarAzul').onclick = () => lerAreaTransferencia(true);
+$('#btCaixinhaManual').onclick = () => { $('#caixinhaManual').hidden = !$('#caixinhaManual').hidden; if (!$('#caixinhaManual').hidden) $('#perguntasManual').focus(); };
+$('#btCriarCaixinha').onclick = () => {
+  const ps = $('#perguntasManual').value.split('\n').map(x => x.trim()).filter(Boolean);
+  if (!ps.length){ toast('Escreva pelo menos uma pergunta.'); return; }
+  const d = $('#optData').value || hoje();
+  const s = normalizar({ data:d, titulo:'Caixinha de ' + DIAS[deIso(d).getDay()], gatilho:'caixinha',
+    stories: ps.map(p => ({ tipo:'resposta', pergunta:p, texto:'' })).concat([{ tipo:'texto', visual:'ritual', texto:'', sticker:{ tipo:'caixinha', texto:'Me pergunta' } }]) });
+  seqs.push(s); salvarSeqs(); $('#perguntasManual').value = ''; $('#caixinhaManual').hidden = true; abrirSeq(s.id); setTimeout(() => $('#edTexto').focus(), 50);
+};
+$('#btCapasDestaque').onclick = () => {
+  const s = normalizar({ id:'capas-destaque', data: hoje(), titulo:'Capas dos destaques', gatilho:'capas',
+    stories: [['Comece aqui','#FFD400'],['Caixinha','#0F0F10'],['Bastidor','#1B2A6B'],['Marcas','#F5F3EE']].map(([t,c]) => ({ tipo:'texto', visual:'capa', texto:t, fundo:c })) });
+  const i = seqs.findIndex(x => x.id === s.id); if (i >= 0) seqs[i] = s; else seqs.push(s); salvarSeqs(); abrirSeq(s.id);
+  toast('No Instagram, use cada imagem como capa do destaque: ela é cortada no círculo do centro.', 5000);
+};
 
 /* ========== ajustes ========== */
-function renderAjustes(){ $('#cfgNome').value = cfg.nome; $('#cfgArroba').value = cfg.arroba; }
+function renderAjustes(){
+  $('#cfgNome').value = cfg.nome; $('#cfgArroba').value = cfg.arroba; $('#cfgRitualTexto').value = cfg.ritualTexto || '';
+  const c = $('#coresRitual'); c.innerHTML = CORES_RITUAL.map(x => `<button data-c="${x}" aria-pressed="${x===cfg.ritualCor}" aria-label="Cor da capa ${x}" style="background:${x}"></button>`).join('');
+  c.querySelectorAll('button').forEach(b => b.onclick = () => { cfg.ritualCor = b.dataset.c; gravar(K.cfg, cfg); renderAjustes(); toast('Cor da capa da caixinha salva.'); });
+}
+$('#cfgRitualTexto').oninput = e => { cfg.ritualTexto = e.target.value; gravar(K.cfg, cfg); };
+$('#cfgRitualFoto').onchange = async e => { const f = e.target.files[0]; if (!f) return; cfg.ritualFoto = await lerFoto(f, 1600); if (!gravar(K.cfg, cfg)) toast('Sem espaço para guardar a foto neste aparelho.'); else toast('Foto da capa salva.'); e.target.value = ''; };
+$('#btTirarRitual').onclick = () => { cfg.ritualFoto = ''; gravar(K.cfg, cfg); toast('Capa sem foto.'); };
 $('#cfgNome').oninput = e => { cfg.nome = e.target.value; gravar(K.cfg, cfg); };
 $('#cfgArroba').oninput = e => { let v = e.target.value.trim(); cfg.arroba = v && v[0] !== '@' ? '@'+v : v; gravar(K.cfg, cfg); };
 $('#cfgAvatar').onchange = async e => { const f = e.target.files[0]; if (!f) return; cfg.avatar = await lerFoto(f, 240); gravar(K.cfg, cfg); toast('Foto do perfil salva.'); };
