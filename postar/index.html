@@ -37,6 +37,13 @@ header.topo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .avatar img{width:100%;height:100%;object-fit:cover}
 .barfoto{position:fixed;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));top:calc(12px + env(safe-area-inset-top,0px));z-index:60;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border-radius:18px;background:var(--bg);color:var(--ink);box-shadow:0 12px 40px rgba(0,0,0,.35);border:1px solid rgba(127,127,127,.25)}
 .barfoto span{flex:1 1 100%;font-weight:600}
+.ajfoto{display:flex;flex-direction:column;gap:14px;padding:16px;border-radius:20px;background:var(--suave);max-width:440px;width:100%;align-self:center}
+.desl{display:flex;flex-direction:column;gap:6px;font-weight:600}
+.desl span{display:flex;justify-content:space-between}
+.desl output{font-weight:500;opacity:.7;font-variant-numeric:tabular-nums}
+.desl input[type=range]{width:100%;height:32px;accent-color:#FFD400}
+.palco.arrastando{cursor:grab;touch-action:none;outline:2px dashed rgba(255,212,0,.7);outline-offset:4px;width:min(100%,250px,30vh)}
+body.ajustando-foto #acao{display:none}
 .selo{display:none;font-size:11px;font-weight:700;letter-spacing:.12em;padding:5px 9px;border-radius:999px;background:var(--ink);color:var(--ink-fg)}
 h2{font:400 26px/1.1 var(--f-display);margin:0;text-wrap:balance}
 h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:600}
@@ -275,7 +282,21 @@ details.mais[open]>summary{margin-bottom:10px}
       <div class="duas">
         <div class="fixa pilha">
           <div class="palco" id="palco"><canvas id="tela" width="1080" height="1920" aria-label="Prévia do story"></canvas><div class="adesivo" id="adesivoGuia" hidden></div></div>
-          <label class="btn" id="btFundoPrevia" style="flex-direction:row;align-self:center;color:var(--fg)">Trocar a foto de fundo<input type="file" accept="image/*" hidden id="fundoPrevia"></label>
+          <div class="linha" id="fundoBotoes" style="justify-content:center">
+            <label class="btn" id="btFundoPrevia" style="flex-direction:row;color:var(--fg)">Trocar a foto<input type="file" accept="image/*" hidden id="fundoPrevia"></label>
+            <button class="pri" id="btAjFoto">Ajustar a foto</button>
+          </div>
+          <div class="ajfoto" id="ajFoto" hidden>
+            <p class="dica" style="margin:0"><b>Arraste a foto</b> na prévia para mudar o enquadramento.</p>
+            <label class="desl"><span>Zoom <output id="ajZv">100%</output></span><input type="range" id="ajZ" min="100" max="300" step="1" value="100"></label>
+            <label class="desl"><span>Desfocar <output id="ajBv">0</output></span><input type="range" id="ajB" min="0" max="40" step="1" value="0"></label>
+            <label class="desl"><span>Escurecer <output id="ajEv">0%</output></span><input type="range" id="ajE" min="0" max="70" step="1" value="0"></label>
+            <div class="linha">
+              <button class="peq" id="ajTodos">Usar em todos os stories</button>
+              <button class="peq fant" id="ajZerar">Voltar ao normal</button>
+              <button class="peq pri" id="ajPronto">Pronto</button>
+            </div>
+          </div>
           <div class="linha" style="justify-content:center">
             <button class="peq" id="btAnt" aria-label="Story anterior">‹</button>
             <span class="muted" id="contador"></span>
@@ -502,7 +523,7 @@ function normalizar(s){
     const t = ['texto','foto','gravar','resposta','case'].includes(st.tipo) ? st.tipo : 'texto';
     const v = ['imagem','vidro','nativo','manchete','papel','nota','conversa','anuncio','ritual','capa'].includes(st.visual) ? st.visual : 'nativo';
     const sk = st.sticker && typeof st.sticker === 'object' ? st.sticker : {};
-    seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', pergunta: st.pergunta||'', imgBusca: st.imgBusca||'', foto: st.foto||'', credito: st.credito||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'',
+    seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', pergunta: st.pergunta||'', imgBusca: st.imgBusca||'', foto: st.foto||'', credito: st.credito||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'', aj: st.aj || null,
       sticker: { tipo: ['caixinha','enquete','quiz','slider','link'].includes(sk.tipo) ? sk.tipo : 'nenhum', texto: sk.texto||'', opcoes: Array.isArray(sk.opcoes) ? sk.opcoes.slice(0,4) : [] } }));
   });
   if (!seq.stories.length) seq.stories.push(novoStory());
@@ -596,6 +617,16 @@ let graoPad = null;
 function grao(ctx, a){ // textura sutil de papel/filme
   if (!graoPad){ const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); const d = g.createImageData(256,256); for (let i=0;i<d.data.length;i+=4){ const v = Math.random()*255; d.data[i]=d.data[i+1]=d.data[i+2]=v; d.data[i+3]=255; } g.putImageData(d,0,0); graoPad = c; }
   ctx.save(); ctx.globalAlpha = a; ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = ctx.createPattern(graoPad, 'repeat'); ctx.fillRect(0,0,W,H); ctx.restore();
+}
+function fundoFoto(ctx, im, st){
+  const a = st.aj || {}; const z = a.z || 1, ox = a.x || 0, oy = a.y || 0, bl = a.b || 0, es = a.e || 0;
+  const r = Math.max(W/im.width, H/im.height) * z; const w = im.width*r, h = im.height*r;
+  const dx = (W-w)/2 + ox*(w-W)/2, dy = (H-h)/2 + oy*(h-H)/2;
+  ctx.save();
+  if (bl > 0){ const m = bl*2.5; ctx.filter = 'blur(' + bl + 'px)'; ctx.drawImage(im, dx - m, dy - m, w + m*2, h + m*2); ctx.filter = 'none'; }
+  else ctx.drawImage(im, dx, dy, w, h);
+  ctx.restore();
+  if (es > 0){ ctx.fillStyle = 'rgba(0,0,0,' + es + ')'; ctx.fillRect(0, 0, W, H); }
 }
 function cobrir(ctx, im, x, y, w, h){ const r = Math.max(w/im.width, h/im.height); const iw = im.width*r, ih = im.height*r; ctx.drawImage(im, x+(w-iw)/2, y+(h-ih)/2, iw, ih); }
 function assinatura(ctx, claro){ // marca discreta embaixo
@@ -756,7 +787,7 @@ function desenhar(ctx, st, o){
   const v = st.visual;
   if (v === 'imagem'){
     const im = imagem(fotos[st.id]);
-    if (im) cobrir(ctx, im, 0, 0, W, H); else fundoElegante(ctx, st.fundo || PR);
+    if (im) fundoFoto(ctx, im, st); else fundoElegante(ctx, st.fundo || PR);
     const B = blocoTexto(ctx, st.texto, W - 220, (y1 - y0)*0.55);
     const emCima = st.sticker.tipo !== 'nenhum';
     const yTop = emCima ? y0 + 70 : y1 - B.h - 60;
@@ -774,7 +805,7 @@ function desenhar(ctx, st, o){
   if (v === 'vidro' || (st.tipo === 'foto' && v === 'vidro')){
     const src = fotos[st.id]; const im = imagem(src);
     const cor = st.fundo || PR; const claroF = !im && cor !== 'grad' && lum(cor) > 0.6;
-    if (im){ cobrir(ctx, im, 0, 0, W, H); const gg = ctx.createLinearGradient(0, H*0.45, 0, H); gg.addColorStop(0, 'rgba(0,0,0,0)'); gg.addColorStop(1, 'rgba(0,0,0,.35)'); ctx.fillStyle = gg; ctx.fillRect(0,0,W,H); ambiente(ctx, true, true); } else fundoElegante(ctx, cor);
+    if (im){ fundoFoto(ctx, im, st); const gg = ctx.createLinearGradient(0, H*0.45, 0, H); gg.addColorStop(0, 'rgba(0,0,0,0)'); gg.addColorStop(1, 'rgba(0,0,0,.35)'); ctx.fillStyle = gg; ctx.fillRect(0,0,W,H); ambiente(ctx, true, true); } else fundoElegante(ctx, cor);
     const dark = !claroF;
     const pad = 64, maxPW = W - 200;
     const B = blocoTexto(ctx, st.texto, maxPW - pad*2, (y1 - y0) - 300);
@@ -789,7 +820,7 @@ function desenhar(ctx, st, o){
   }
   if (st.tipo === 'foto'){
     const src = fotos[st.id]; const im = imagem(src);
-    if (im){ const r = Math.max(W/im.width, H/im.height); const w = im.width*r, h = im.height*r; ctx.drawImage(im, (W-w)/2, (H-h)/2, w, h); const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(0,0,0,.35)'); g.addColorStop(.3,'rgba(0,0,0,0)'); g.addColorStop(.75,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.35)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H); }
+    if (im){ fundoFoto(ctx, im, st); const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(0,0,0,.35)'); g.addColorStop(.3,'rgba(0,0,0,0)'); g.addColorStop(.75,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,.35)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H); }
     else { ctx.fillStyle = '#2A2A2E'; ctx.fillRect(0,0,W,H); ctx.fillStyle = '#6E6E75'; ctx.font = '600 44px '+F_SANS; ctx.textAlign = 'center'; ctx.fillText(o.exportar ? '' : 'Escolha uma foto sua', W/2, H/2); ctx.textAlign = 'left'; }
     if (st.texto.trim()){
       const L = ajustar(ctx, st.texto, { max:50, min:36, maxW:W-260, maxH:(y1-y0)*0.7, peso:600, lh:1.36 });
@@ -1064,7 +1095,7 @@ function renderRoteiro(){
     };
   });
 }
-async function aplicarFoto(x, blob){ if (x.tipo === 'texto' && !['imagem','vidro'].includes(x.visual)) x.visual = 'imagem'; fotos[x.id] = await lerFoto(blob, 1600); $('#barFoto').hidden = true; x.credito = ''; x.fotoUrl = ''; salvarFotos(); salvarSeqs(); fotoAlvo = null; try { sessionStorage.removeItem('dan_stories_alvo'); } catch(e){} $('#colarFoto').hidden = true; vibrar(); toast('Foto colocada.'); renderStories(); }
+async function aplicarFoto(x, blob){ if (x.aj) x.aj = { b: x.aj.b||0, e: x.aj.e||0 }; if (x.tipo === 'texto' && !['imagem','vidro'].includes(x.visual)) x.visual = 'imagem'; fotos[x.id] = await lerFoto(blob, 1600); $('#barFoto').hidden = true; x.credito = ''; x.fotoUrl = ''; salvarFotos(); salvarSeqs(); fotoAlvo = null; try { sessionStorage.removeItem('dan_stories_alvo'); } catch(e){} $('#colarFoto').hidden = true; vibrar(); toast('Foto colocada.'); renderStories(); }
 async function colarFoto(pedido){
   const id = fotoAlvo || (() => { try { return sessionStorage.getItem('dan_stories_alvo'); } catch(e){ return null; } })(); if (!id || !atual) return;
   const x = atual.stories.find(s => s.id === id); if (!x) return;
@@ -1089,7 +1120,7 @@ document.addEventListener('visibilitychange', async () => { if (!document.hidden
 $('#barFotoColar').onclick = () => colarFoto(true);
 $('#barFotoGaleria').onchange = async e => { const f = e.target.files[0]; if (!f) return; const id = (fotoAlvo || (() => { try { return sessionStorage.getItem('dan_stories_alvo'); } catch(e){ return null; } })()); const x = atual && atual.stories.find(s => s.id === id); if (x) await aplicarFoto(x, f); e.target.value = ''; };
 $('#barFotoFechar').onclick = () => { $('#barFoto').hidden = true; fotoAlvo = null; try { sessionStorage.removeItem('dan_stories_alvo'); } catch(e){} };
-$('#fundoPrevia').onchange = async e => { const f = e.target.files[0]; if (!f || !atual) return; await aplicarFoto(atual.stories[idx], f); e.target.value = ''; };
+$('#fundoPrevia').onchange = async e => { const f = e.target.files[0]; if (!f || !atual) return; const st = atual.stories[idx]; st.aj = null; await aplicarFoto(st, f); e.target.value = ''; setModo('previa'); abrirAjFoto(); };
 function renderPasso(){
   const st = atual.stories[idx], n = atual.stories.length; const p = $('#passo'); const pr = [];
   const sk = st.sticker; const nomes = { caixinha:'Caixinha de perguntas', enquete:'Enquete', quiz:'Quiz', slider:'Slider de emoji', link:'Link' };
@@ -1108,9 +1139,29 @@ function renderPasso(){
   const c = $('#btCopiarAdesivo'); if (c) c.onclick = async () => { toast(await copiar(st.sticker.texto) ? 'Copiado. Cole no adesivo do Instagram.' : 'Não deu para copiar.'); };
   const b = $('#btBaixarEste'); if (b) b.onclick = () => PODE_POSTAR ? enviar([st]) : baixarAzul([st]);
 }
+let ajAberto = false;
+function stAtual(){ return atual && atual.stories[idx]; }
+function syncAjFoto(st){ const a = st.aj || {}; $('#ajZ').value = Math.round((a.z||1)*100); $('#ajB').value = a.b||0; $('#ajE').value = Math.round((a.e||0)*100); $('#ajZv').textContent = $('#ajZ').value + '%'; $('#ajBv').textContent = $('#ajB').value; $('#ajEv').textContent = $('#ajE').value + '%'; }
+function abrirAjFoto(){ const st = stAtual(); if (!st) return; ajAberto = true; $('#ajFoto').hidden = false; $('#palco').classList.add('arrastando'); document.body.classList.add('ajustando-foto'); syncAjFoto(st); setTimeout(() => $('#palco').scrollIntoView({ block:'start', behavior:'smooth' }), 50); }
+function fecharAjFoto(){ ajAberto = false; $('#ajFoto').hidden = true; $('#palco').classList.remove('arrastando'); document.body.classList.remove('ajustando-foto'); }
+let tAj; function guardarAj(){ clearTimeout(tAj); tAj = setTimeout(() => { salvarSeqs(); }, 300); }
+function lerSliders(st){ st.aj = Object.assign({}, st.aj, { z: +$('#ajZ').value/100, b: +$('#ajB').value, e: +$('#ajE').value/100 }); syncAjFoto(st); redesenhar(); guardarAj(); }
+['#ajZ','#ajB','#ajE'].forEach(q => $(q).addEventListener('input', () => { const st = stAtual(); if (st) lerSliders(st); }));
+$('#btAjFoto').onclick = () => { vibrar(); ajAberto ? fecharAjFoto() : abrirAjFoto(); };
+$('#ajPronto').onclick = () => { fecharAjFoto(); renderStories(); toast('Foto ajustada.'); };
+$('#ajZerar').onclick = () => { const st = stAtual(); if (!st) return; st.aj = null; syncAjFoto(st); redesenhar(); salvarSeqs(); };
+$('#ajTodos').onclick = () => { const st = stAtual(); if (!st || !atual) return; const a = st.aj || {}; atual.stories.forEach(x => { if (x !== st && fotos[x.id]) x.aj = Object.assign({}, x.aj, { b: a.b||0, e: a.e||0 }); }); salvarSeqs(); renderStories(); toast('Desfoque e escurecer aplicados em todos os stories com foto.'); };
+(function(){ const pal = $('#palco'); let p0 = null;
+  pal.addEventListener('pointerdown', e => { if (!ajAberto) return; const st = stAtual(); if (!st || !fotos[st.id]) return; p0 = { x:e.clientX, y:e.clientY, a: Object.assign({ x:0, y:0, z:1 }, st.aj) }; pal.setPointerCapture(e.pointerId); e.preventDefault(); });
+  pal.addEventListener('pointermove', e => { if (!p0) return; const st = stAtual(); const im = imagem(fotos[st.id]); if (!im) return;
+    const k = W / pal.getBoundingClientRect().width; const r = Math.max(W/im.width, H/im.height) * (p0.a.z||1); const mx = (im.width*r - W)/2, my = (im.height*r - H)/2;
+    const nx = mx > 1 ? p0.a.x + (e.clientX - p0.x)*k/mx : 0, ny = my > 1 ? p0.a.y + (e.clientY - p0.y)*k/my : 0;
+    st.aj = Object.assign({}, st.aj, { x: Math.max(-1, Math.min(1, nx)), y: Math.max(-1, Math.min(1, ny)) }); redesenhar(); });
+  const fim = () => { if (p0){ p0 = null; guardarAj(); } }; pal.addEventListener('pointerup', fim); pal.addEventListener('pointercancel', fim);
+})();
 (function(){ let x0 = null; const pal = $('#palco');
   pal.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive:true });
-  pal.addEventListener('touchend', e => { if (x0 == null || !atual) return; const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) < 40) return; if (dx < 0 && idx < atual.stories.length-1){ idx++; renderStories(); } else if (dx > 0 && idx > 0){ idx--; renderStories(); } }, { passive:true });
+  pal.addEventListener('touchend', e => { if (x0 == null || !atual || ajAberto){ x0 = null; return; } const dx = e.changedTouches[0].clientX - x0; x0 = null; if (Math.abs(dx) < 40) return; if (dx < 0 && idx < atual.stories.length-1){ idx++; renderStories(); } else if (dx > 0 && idx > 0){ idx--; renderStories(); } }, { passive:true });
 })();
 function renderStories(){
   const tem = !!atual; $('#semSeq').hidden = tem; $('#comSeq').hidden = !tem; if (!tem){ renderAcao(); return; }
@@ -1132,7 +1183,7 @@ function renderStories(){
   $('#rotTexto').textContent = st.tipo === 'resposta' ? 'Sua resposta' : st.tipo === 'case' ? 'Resultado (1ª linha) e contexto (depois de uma linha em branco)' : (st.visual === 'anuncio' && st.tipo === 'texto') ? 'Título (1º parágrafo) e texto (depois de uma linha em branco)' : (st.visual === 'ritual' && st.tipo === 'texto') ? 'Frase da capa (vazio = a dos Ajustes)' : 'Texto do story';
   $('#rotFoto').textContent = st.tipo === 'case' ? 'Escolher print' : (st.tipo === 'texto' && (st.visual === 'vidro' || st.visual === 'imagem')) ? 'Foto de fundo (sua)' : 'Escolher foto';
   $('#blocoGravar').hidden = st.tipo !== 'gravar';
-  $('#btFundoPrevia').hidden = !(aceitaFoto(st) || (st.tipo === 'texto' && st.visual !== 'ritual'));
+  { const pode = aceitaFoto(st) || (st.tipo === 'texto' && st.visual !== 'ritual'); $('#fundoBotoes').hidden = !pode; const tf = !!fotos[st.id]; $('#btFundoPrevia').firstChild.textContent = tf ? 'Trocar a foto' : 'Pôr foto de fundo'; $('#btAjFoto').hidden = !tf; if (!tf || !pode) fecharAjFoto(); else if (ajAberto) syncAjFoto(st); }
   $('#blocoFoto').hidden = !(st.tipo === 'foto' || st.tipo === 'case' || (st.tipo === 'texto' && (st.visual === 'vidro' || st.visual === 'imagem')));
   $('#edVisual').closest('label').hidden = !(st.tipo === 'texto' || st.tipo === 'foto');
   $('#blocoCor').hidden = !((st.tipo === 'texto' && ['nativo','conversa','anuncio','capa','vidro'].includes(st.visual) && !(st.visual === 'vidro' && fotos[st.id])) || st.tipo === 'resposta');
