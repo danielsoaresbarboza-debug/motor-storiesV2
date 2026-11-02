@@ -172,11 +172,16 @@ details.mais[open]>summary{margin-bottom:10px}
       <p class="habito" id="habito"></p>
     </div>
     <div class="cartao" id="hojeCartao"></div>
+    <div class="cartao" id="pedirClaude">
+      <h3>Sem ideia hoje?</h3>
+      <p>Abra o Claude e escreva <b>“stories de hoje”</b>. Ele escreve a sequência inteira, diz onde vai foto e te manda um link. Você abre o link aqui, escolhe as fotos e posta.</p>
+      <div class="linha"><button class="pri" id="btCopiarPedido">Copiar o pedido</button></div>
+    </div>
     <div class="guia" id="guia">
       <h3>Como postar em 1 minuto</h3>
       <ol>
-        <li>Em <b>Hoje</b>, o app mostra qual sequência postar. Toque em <b>Ver antes</b> se quiser ler o texto de cada story.</li>
-        <li>Toque em <b>Baixar e postar</b> (no app instalado: <b>Postar no Instagram</b>).</li>
+        <li>Peça no Claude: <b>stories de hoje</b>. Abra o link que ele mandar (ou toque em <b>Colar sequência do Claude</b>).</li>
+        <li>Em <b>Ver antes</b>, escolha a foto dos stories que pedem foto (Unsplash, Pinterest ou Google → copiar → voltar).</li><li>Toque em <b>Postar no Instagram</b> (dentro do Claude: <b>Baixar e postar</b>).</li>
         <li>No Instagram, abra o story, escolha a imagem e coloque o adesivo que o app indicar.</li>
         <li>Volte e toque em <b>Postei</b>. A sequência de dias sobe.</li>
       </ol>
@@ -484,14 +489,14 @@ const ROTINA = {
 const rotinaDe = d => ROTINA[deIso(d).getDay()];
 
 /* ========== modelo de dados ========== */
-function novoStory(p){ return Object.assign({ id:uid(), tipo:'texto', visual:'nativo', texto:'', pergunta:'', imgBusca:'', credito:'', roteiro:'', mostrar:'', fundo:'', sticker:{tipo:'nenhum', texto:'', opcoes:[]} }, p||{}); }
+function novoStory(p){ return Object.assign({ id:uid(), tipo:'texto', visual:'nativo', texto:'', pergunta:'', imgBusca:'', foto:'', credito:'', roteiro:'', mostrar:'', fundo:'', sticker:{tipo:'nenhum', texto:'', opcoes:[]} }, p||{}); }
 function normalizar(s){
   const seq = { id: s.id || uid(), entrada: s.entrada || '', data: s.data || hoje(), titulo: (s.titulo||'Sequência').slice(0,60), gatilho: s.gatilho||'', dispositivos: s.dispositivos||[], respostasModelo: s.respostasModelo||[], conferir: s.conferir||[], status: s.status==='postado'?'postado':'planejado', criado: s.criado || Date.now(), stories: [] };
   (s.stories||[]).forEach(st => {
     const t = ['texto','foto','gravar','resposta','case'].includes(st.tipo) ? st.tipo : 'texto';
     const v = ['imagem','vidro','nativo','manchete','papel','nota','conversa','anuncio','ritual','capa'].includes(st.visual) ? st.visual : 'nativo';
     const sk = st.sticker && typeof st.sticker === 'object' ? st.sticker : {};
-    seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', pergunta: st.pergunta||'', imgBusca: st.imgBusca||'', credito: st.credito||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'',
+    seq.stories.push(novoStory({ id: st.id||uid(), tipo: st.visual==='foto' && t==='texto' ? 'foto' : t, visual: v, texto: st.texto||'', pergunta: st.pergunta||'', imgBusca: st.imgBusca||'', foto: st.foto||'', credito: st.credito||'', roteiro: st.roteiro||'', mostrar: st.mostrar||'', fundo: st.fundo||'',
       sticker: { tipo: ['caixinha','enquete','quiz','slider','link'].includes(sk.tipo) ? sk.tipo : 'nenhum', texto: sk.texto||'', opcoes: Array.isArray(sk.opcoes) ? sk.opcoes.slice(0,4) : [] } }));
   });
   if (!seq.stories.length) seq.stories.push(novoStory());
@@ -529,20 +534,30 @@ function tokens(texto){ // parágrafos → palavras; cada palavra tem partes com
   });
 }
 function medir(ctx, w){ let x = 0; w.partes.forEach(pt => { pt.tw = ctx.measureText(pt.t).width; x += pt.tw; }); w.tw = x; return x; }
-function quebra(ctx, paras, maxW){
+function quebraGulosa(ctx, p, maxW, esp){
+  const out = []; let cur = [], cw = 0;
+  p.forEach(t => { const tw = t.tw; const nw = cur.length ? cw + esp + tw : tw; if (nw > maxW && cur.length){ out.push({ toks:cur, w:cw }); cur = [t]; cw = tw; } else { cur.push(t); cw = nw; } });
+  if (cur.length) out.push({ toks:cur, w:cw });
+  return out;
+}
+function quebra(ctx, paras, maxW){ // linhas equilibradas (como text-wrap: balance) e marca de fim de parágrafo
   const linhas = []; const esp = ctx.measureText(' ').width;
   paras.forEach(p => {
     if (!p.length){ linhas.push({ toks:[], w:0, vazio:true }); return; }
-    let cur = [], cw = 0;
-    p.forEach(t => { const tw = medir(ctx, t); const nw = cur.length ? cw + esp + tw : tw; if (nw > maxW && cur.length){ linhas.push({ toks:cur, w:cw }); cur = [t]; cw = tw; } else { cur.push(t); cw = nw; } });
-    if (cur.length) linhas.push({ toks:cur, w:cw });
+    p.forEach(t => medir(ctx, t));
+    let ls = quebraGulosa(ctx, p, maxW, esp);
+    if (ls.length > 1){ let lo = maxW * 0.5, hi = maxW;
+      for (let k = 0; k < 12; k++){ const mid = (lo + hi)/2; if (quebraGulosa(ctx, p, mid, esp).length > ls.length) lo = mid; else hi = mid; }
+      const eq = quebraGulosa(ctx, p, hi, esp); if (eq.length === ls.length) ls = eq; }
+    ls[ls.length-1].fim = true; linhas.push(...ls);
   });
   return linhas;
 }
+function alturaLinhas(ls, lh){ return ls.reduce((a, l, i) => a + (l.vazio ? lh*0.45 : lh + (l.fim && i < ls.length-1 && !(ls[i+1] && ls[i+1].vazio) ? lh*0.32 : 0)), 0); }
 function ajustar(ctx, texto, o){ // acha o maior tamanho que cabe
   const paras = tokens(texto);
-  const calc = s => { const font = (o.peso||700)+' '+s+'px '+(o.fam||F_SANS); ctx.font = font; const ls = quebra(ctx, paras, o.maxW); const lh = s*(o.lh||1.18); return { font, linhas: ls, s, lh, h: ls.reduce((a,l) => a + (l.vazio ? lh*0.5 : lh), 0) }; };
-  for (let s = o.max; s >= o.min; s -= 4){ const r = calc(s); if (r.h <= o.maxH) return r; }
+  const calc = s => { const font = (o.peso||700)+' '+s+'px '+(o.fam||F_SANS); ctx.font = font; const ls = quebra(ctx, paras, o.maxW); const lh = s*(o.lh||1.18); return { font, linhas: ls, s, lh, h: alturaLinhas(ls, lh), larg: Math.max(0, ...ls.map(l => l.w)) }; };
+  for (let s = o.max; s >= o.min; s -= 2){ const r = calc(s); if (r.h <= o.maxH) return r; }
   return calc(o.min);
 }
 function rr(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
@@ -550,7 +565,7 @@ function escrever(ctx, L, x, y, o){ // o: alinhar, cor, marcaFundo, marcaCor, ca
   ctx.textBaseline = 'alphabetic'; ctx.font = L.font;
   const esp = ctx.measureText(' ').width; let yy = y;
   L.linhas.forEach(l => {
-    if (l.vazio){ yy += L.lh*0.5; return; }
+    if (l.vazio){ yy += L.lh*0.45; return; }
     let xx = o.alinhar === 'centro' ? x - l.w/2 : x;
     const base = yy + L.s*0.92;
     if (o.caixa){ ctx.fillStyle = o.caixa; rr(ctx, xx-22, yy-6, l.w+44, L.lh+4, 18); ctx.fill(); }
@@ -567,6 +582,7 @@ function escrever(ctx, L, x, y, o){ // o: alinhar, cor, marcaFundo, marcaCor, ca
       xx += esp;
     });
     yy += L.lh;
+    const ii = L.linhas.indexOf(l); if (l.fim && ii < L.linhas.length-1 && !L.linhas[ii+1].vazio) yy += L.lh*0.32;
   });
   return yy;
 }
@@ -655,6 +671,27 @@ function cabecalhoVidro(ctx, x, y, cor){ // foto e nome pequenos
   ctx.fillStyle = cor; ctx.globalAlpha = .8; ctx.font = '600 26px '+F_SANS; if ('letterSpacing' in ctx) ctx.letterSpacing = '2px';
   ctx.fillText((cfg.nome || '').toUpperCase(), x + dx, y); if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'; ctx.globalAlpha = 1;
 }
+function dividirBloco(texto){ // parágrafos; o que tem **destaque** (ou o 1º) vira a frase grande, o resto fica menor
+  const t = String(texto || '').trim(); const partes = t.split(/\n+/).map(x => x.trim()).filter(Boolean);
+  const palavras = t.replace(/\*\*/g,'').split(/\s+/).filter(Boolean).length;
+  if (partes.length < 2 || palavras <= 14) return [{ t: partes.join('\n'), grande: true }];
+  let k = partes.findIndex(x => /\*\*/.test(x)); if (k < 0) k = 0;
+  return partes.map((x, i) => ({ t: x, grande: i === k }));
+}
+function blocoTexto(ctx, texto, maxW, maxH){
+  const ps = dividirBloco(texto);
+  for (let f = 1; f >= 0.55; f -= 0.07){
+    const Ls = ps.map(p => p.grande ? ajustar(ctx, p.t, { max:Math.round(70*f), min:Math.round(40*f), maxW, maxH, peso:500, fam:F_SERIF, lh:1.14 })
+                                   : ajustar(ctx, p.t, { max:Math.round(40*f), min:28, maxW, maxH, peso:400, lh:1.42 }));
+    let h = 0; Ls.forEach((L, i) => { h += L.h + (i ? Math.max(L.s, Ls[i-1].s)*0.55 : 0); });
+    if (h <= maxH || f <= 0.56) return { ps, Ls, h, larg: Math.max(...Ls.map(L => L.larg)) };
+  }
+}
+function desenharBloco(ctx, B, x, y, cor){
+  let yy = y;
+  B.Ls.forEach((L, i) => { if (i) yy += Math.max(L.s, B.Ls[i-1].s)*0.55; ctx.globalAlpha = B.ps[i].grande ? 1 : .88; yy = escrever(ctx, L, x, yy, { cor, marcaFundo:AM, marcaCor:PR }); });
+  ctx.globalAlpha = 1;
+}
 function areaTexto(st){ return st.sticker && st.sticker.tipo !== 'nenhum' ? [TOPO+40, ADES[0]-50] : [TOPO+40, BASE]; }
 function fundoNativo(ctx, cor){
   if (cor === 'grad'){ const g = ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#1B2A6B'); g.addColorStop(.55,'#C2362B'); g.addColorStop(1,'#FFD400'); ctx.fillStyle = g; }
@@ -688,8 +725,8 @@ function desenhar(ctx, st, o){
     escrever(ctx, Lq, W/2, by+100, { alinhar:'centro', cor:'#141414' });
     // resposta
     const yA = by + bh + 90; const yLim = st.sticker.tipo !== 'nenhum' ? ADES[0]-40 : BASE;
-    const La = ajustar(ctx, st.texto || '', { max:68, min:42, maxW:W-220, maxH:yLim-yA, peso:500, fam:F_SERIF, lh:1.16 });
-    escrever(ctx, La, 100, yA, { cor:fg, marcaFundo: cor === AM ? PR : AM, marcaCor: cor === AM ? AM : PR });
+    const Ba = blocoTexto(ctx, st.texto || '', W-220, yLim-yA);
+    desenharBloco(ctx, Ba, 110, yA, fg);
     assinatura(ctx, claro); ctx.restore(); return;
   }
   if (st.tipo === 'case'){
@@ -714,18 +751,16 @@ function desenhar(ctx, st, o){
   if (v === 'imagem'){
     const im = imagem(fotos[st.id]);
     if (im) cobrir(ctx, im, 0, 0, W, H); else fundoElegante(ctx, st.fundo || PR);
-    const palavras = st.texto.replace(/\*\*/g,'').split(/\s+/).filter(Boolean).length;
-    const L = ajustar(ctx, st.texto, palavras <= 16 ? { max:78, min:46, maxW:W-200, maxH:(y1-y0)*0.55, peso:500, fam:F_SERIF, lh:1.1 } : { max:48, min:34, maxW:W-200, maxH:(y1-y0)*0.55, peso:600, lh:1.3 });
+    const B = blocoTexto(ctx, st.texto, W - 220, (y1 - y0)*0.55);
     const emCima = st.sticker.tipo !== 'nenhum';
-    const yTop = emCima ? y0 + 60 : y1 - L.h - 40;
-    // véu para contraste: escurece só onde o texto fica
-    const g = emCima ? ctx.createLinearGradient(0, 0, 0, yTop + L.h + 260) : ctx.createLinearGradient(0, yTop - 360, 0, H);
-    if (emCima){ g.addColorStop(0, 'rgba(0,0,0,.78)'); g.addColorStop(.6, 'rgba(0,0,0,.45)'); g.addColorStop(1, 'rgba(0,0,0,0)'); }
-    else { g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.35, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,.82)'); }
+    const yTop = emCima ? y0 + 70 : y1 - B.h - 60;
+    const g = emCima ? ctx.createLinearGradient(0, 0, 0, yTop + B.h + 300) : ctx.createLinearGradient(0, yTop - 420, 0, H);
+    if (emCima){ g.addColorStop(0, 'rgba(0,0,0,.8)'); g.addColorStop(.6, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,0)'); }
+    else { g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.35, 'rgba(0,0,0,.52)'); g.addColorStop(1, 'rgba(0,0,0,.85)'); }
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); grao(ctx, .05);
     ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 18;
-    cabecalhoVidro(ctx, 100, yTop - 26, '#F7F6F2');
-    escrever(ctx, L, 100, yTop, { cor:'#F7F6F2', marcaFundo:AM, marcaCor:PR });
+    cabecalhoVidro(ctx, 110, yTop - 30, '#F7F6F2');
+    desenharBloco(ctx, B, 110, yTop, '#F7F6F2');
     ctx.restore();
     if (im && st.credito){ ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.font = '500 20px '+F_SANS; ctx.textAlign = 'center'; ctx.fillText(st.credito.slice(0, 90), W/2, H - 120); ctx.textAlign = 'left'; }
     ctx.restore(); return;
@@ -735,15 +770,14 @@ function desenhar(ctx, st, o){
     const cor = st.fundo || PR; const claroF = !im && cor !== 'grad' && lum(cor) > 0.6;
     if (im){ cobrir(ctx, im, 0, 0, W, H); const gg = ctx.createLinearGradient(0, H*0.45, 0, H); gg.addColorStop(0, 'rgba(0,0,0,0)'); gg.addColorStop(1, 'rgba(0,0,0,.35)'); ctx.fillStyle = gg; ctx.fillRect(0,0,W,H); ambiente(ctx, true, true); } else fundoElegante(ctx, cor);
     const dark = !claroF;
-    const palavras = st.texto.replace(/\*\*/g,'').split(/\s+/).filter(Boolean).length;
-    const serif = palavras <= 18;
-    const pw = W - 200, px = 100, pad = 64;
-    const L = ajustar(ctx, st.texto, serif ? { max:72, min:44, maxW:pw - pad*2, maxH:(y1-y0) - 260, peso:500, fam:F_SERIF, lh:1.12 } : { max:44, min:32, maxW:pw - pad*2, maxH:(y1-y0) - 260, peso:500, lh:1.36 });
-    const ph = L.h + pad*2 + 60;
-    let py = st.sticker.tipo !== 'nenhum' ? y0 + 20 : (im ? Math.max(y0, y1 - ph - 40) : y0 + (y1 - y0 - ph)/2);
-    const fg = vidro(ctx, px, py, pw, ph, 56, dark);
+    const pad = 64, maxPW = W - 200;
+    const B = blocoTexto(ctx, st.texto, maxPW - pad*2, (y1 - y0) - 300);
+    const pw = Math.max(W*0.62, Math.min(maxPW, B.larg + pad*2)), px = (W - pw)/2;
+    const ph = B.h + pad*2 + 54;
+    let py = st.sticker.tipo !== 'nenhum' ? y0 + 20 : (im ? Math.max(y0, y1 - ph - 60) : y0 + (y1 - y0 - ph)/2);
+    const fg = vidro(ctx, px, py, pw, ph, 52, dark);
     cabecalhoVidro(ctx, px + pad, py + pad + 4, fg);
-    escrever(ctx, L, px + pad, py + pad + 50, { cor:fg, marcaFundo:AM, marcaCor:PR });
+    desenharBloco(ctx, B, px + pad, py + pad + 46, fg);
     if (im && st.credito){ ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.font = '500 20px '+F_SANS; ctx.textAlign = 'center'; ctx.fillText(st.credito.slice(0, 90), W/2, H - 120); ctx.textAlign = 'left'; }
     ctx.restore(); return;
   }
@@ -777,7 +811,7 @@ function desenhar(ctx, st, o){
   } else if (v === 'anuncio'){
     const cor = st.fundo || PR; fundoElegante(ctx, cor);
     const claro = cor !== 'grad' && lum(cor) > 0.6; const fg = claro ? PR : '#F5F3EE';
-    const partes = String(st.texto||'').split(/\n\s*\n/); const titulo = partes[0] || ''; let corpo = partes.slice(1).join('\n\n');
+    const partes = String(st.texto||'').split(/\n\s*\n/); const titulo = (partes[0] || '').replace(/\n/g, ' '); let corpo = partes.slice(1).join('\n\n');
     corpo = corpo.replace(/^(\s*)(\d+[.)]|[–-])\s+/gm, (m, a, n) => a + '**' + n + '** ');
     const Lt = ajustar(ctx, titulo, { max:100, min:60, maxW:W-200, maxH:(y1-y0)*(corpo ? .5 : .85), peso:500, fam:F_SERIF, lh:1.04 });
     const Lc = corpo.trim() ? ajustar(ctx, corpo, { max:42, min:32, maxW:W-200, maxH:(y1-y0) - Lt.h - 140, peso:500, lh:1.32 }) : null;
@@ -880,7 +914,7 @@ function renderHoje(){
   const semanas = new Set(seqs.filter(s => s.status === 'postado').map(s => inicioSemana(s.data)).concat(diretos.map(inicioSemana))).size;
   $('#habito').textContent = 'Semana ' + Math.max(1, semanas) + ' de 50 do hábito · meta de hoje: ' + rotinaDe(hoje()).meta;
   const sh = $('#semanaHoje'); sh.innerHTML = semanaHTML(inicioSemana(hoje())); sh.querySelectorAll('.dia').forEach(b => b.onclick = () => { semSel = b.dataset.d; semIni = inicioSemana(semSel); ir('agenda'); });
-  const l = porDia(hoje()); const c = $('#hojeCartao'); const R = rotinaDe(hoje());
+  const l = porDia(hoje()); const c = $('#hojeCartao'); const R = rotinaDe(hoje()); $('#pedirClaude').hidden = l.length > 0;
   const faixa = `<div class="rotina"><small>Hoje é dia de</small><b>${R.nome}</b><p>${R.dica}</p></div>`;
   if (l.length){
     const ordem = [...l].sort((x, y) => (x.gatilho === 'alta') - (y.gatilho === 'alta'));
@@ -926,6 +960,7 @@ function renderAgenda(){
   c.querySelectorAll('[data-q]').forEach(b => b.onclick = () => { if (b.dataset.q === 'branco') emBranco(semSel); else { $('#optData').value = semSel; escolherEntrada(RS.e); ir('criar'); } });
   $('#horaLembrete').value = cfg.hora || '06:30';
 }
+$('#btCopiarPedido').onclick = async () => { vibrar(); const t = 'Stories de hoje (' + rotuloDia(hoje()) + ', dia de ' + rotinaDe(hoje()).nome + ').'; toast(await copiar(t) ? 'Copiado. Cole no chat do Claude.' : 'Escreva no Claude: stories de hoje'); };
 $('#btFecharGuia').onclick = () => { gravar('dan_stories_guia_ok_v1', true); $('#guia').hidden = true; };
 $('#semAnt').onclick = () => { semIni = soma(semIni,-7); semSel = semIni; renderAgenda(); };
 $('#semProx').onclick = () => { semIni = soma(semIni,7); semSel = semIni; renderAgenda(); };
@@ -974,7 +1009,7 @@ function renderRoteiro(){
     if (x.tipo === 'gravar') campos += `<textarea data-campo="roteiro" data-i="${i}" rows="3" aria-label="Roteiro do story ${i+1}">${esc(x.roteiro || x.texto)}</textarea>`;
     else campos += `<textarea data-campo="texto" data-i="${i}" rows="3" aria-label="Texto do story ${i+1}" placeholder="Escreva o texto">${esc(x.texto)}</textarea>`;
     const info = [];
-    if (aceitaFoto(x) && !fotos[x.id]) info.push(x.tipo === 'case' ? 'Falta o print.' : x.tipo === 'foto' ? 'Falta a sua foto.' : 'Sem foto: vai com fundo escuro com luz. Para pôr foto, escolha abaixo.');
+    if (aceitaFoto(x) && !fotos[x.id]) info.push(x.tipo === 'case' ? 'Falta o print.' : (x.foto ? '<b>Foto sugerida:</b> ' + esc(x.foto) + '. Escolha abaixo, copie e volte.' : x.tipo === 'foto' ? 'Falta a sua foto.' : 'Sem foto: vai com fundo escuro com luz. Para pôr foto, escolha abaixo.'));
     if (x.sticker.tipo !== 'nenhum') info.push('No Instagram: adesivo <b>' + NOMES_AD[x.sticker.tipo] + '</b>' + (x.sticker.texto ? ' “' + esc(x.sticker.texto) + '”' : '') + (x.sticker.opcoes.length ? ' (' + x.sticker.opcoes.map(esc).join(' / ') + ')' : '') + ' no espaço tracejado.');
     if (x.tipo === 'gravar') info.push('Grave no Instagram' + (x.mostrar ? ' mostrando ' + esc(x.mostrar) : '') + '. Use o teleprompter.');
     const chips = [];
