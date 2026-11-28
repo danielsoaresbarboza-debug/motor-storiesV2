@@ -79,3 +79,6 @@
 2026-11-27 | Intelbras põe câmera gigante na Paulista (Take On Me com sons de produto) | marcas
 2026-11-27 | Artifacts do Claude viram app no Mac e Windows (Instalar como app) | IA
 2026-11-27 | WhatsApp libera agendamento de mensagens (até 14 dias) | redes
+2026-11-28 | Bullguer chama o Woody da Polishop na Black Friday (Standard a R$ 15) | marcas
+2026-11-28 | Black Friday: 13,2 mi de transações em 12h (Cielo), e-commerce +5,6% (Neotrust) | Brasil
+2026-11-28 | OpenAI corrige erro de cobrança e limite do GPT-6.2 chega 40% mais rápido | IA
